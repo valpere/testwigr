@@ -1,42 +1,72 @@
 plugins {
-	id 'groovy'
-	id 'org.springframework.boot' version '3.4.3'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'groovy'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.apache.groovy:groovy:4.0.25'
+    // Groovy
+    implementation 'org.apache.groovy:groovy:4.0.25'
+    
+    // Spring Boot starters
+		implementation 'org.springframework.boot:spring-boot-starter-data-mongodb:3.4.3'
+		implementation 'org.springframework.boot:spring-boot-starter-security:3.4.3'
+		implementation 'org.springframework.boot:spring-boot-starter-validation:3.4.3'
+		implementation 'org.springframework.boot:spring-boot-starter-web:3.4.3'
 
-	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb:3.4.3'
-	implementation 'org.springframework.boot:spring-boot-starter-security:3.4.3'
-	implementation 'org.springframework.boot:spring-boot-starter-validation:3.4.3'
-	implementation 'org.springframework.boot:spring-boot-starter-web:3.4.3'
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
-	developmentOnly 'org.springframework.boot:spring-boot-devtools:3.4.3'
+    // Swagger / OpenAPI for Spring Boot 3.x
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
+		implementation 'org.springdoc:springdoc-openapi-ui:1.8.0'
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.4.3'
-	testImplementation 'org.springframework.security:spring-security-test:6.4.3'
+    // Development tools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools:3.4.3'
 
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.0'
-  
-	// For Spock testing
-	testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'
-	testImplementation 'org.spockframework:spock-spring:2.4-M5-groovy-4.0'
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.4.3'
+    testImplementation 'org.springframework.security:spring-security-test:6.4.3'
+
+    // For Spock testing
+    testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'
+    testImplementation 'org.spockframework:spock-spring:2.4-M4-groovy-4.0'
+
+		// Ensure JUnit platform dependencies have consistent versions
+    // Either force a specific version:
+    testImplementation(platform('org.junit:junit-bom:5.10.2'))
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.0' -- conflicts
+		// testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+
+		// Add this to your dependencies
+		// testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo.spring31x:4.12.2'
+		testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo.spring30x:4.11.0'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
+
+// configurations.all {
+//     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+//         if (details.requested.group == 'org.junit.platform') {
+//             details.useVersion '5.10.2'
+//         }
+//     }
+// }

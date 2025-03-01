@@ -15,9 +15,9 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
 
-import javax.validation.Valid
-import javax.validation.constraints.NotBlank
-import javax.validation.constraints.Size
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 
 @RestController
 @RequestMapping('/api/posts')
@@ -131,7 +131,6 @@ class PostController {
     }
 
     static class CreatePostRequest {
-
         @NotBlank(message = 'Content cannot be empty')
         @Size(max = 280, message = 'Content cannot exceed 280 characters')
         String content

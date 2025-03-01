@@ -24,7 +24,7 @@ class PostControllerSpec extends Specification {
     
     def "should create a post"() {
         given:
-        def postRequest = new PostController.PostRequest(content: "Test post")
+        def postRequest = new PostController.CreatePostRequest(content: "Test post")
         def userId = "123"
         def user = new User(id: userId, username: "testuser")
         def post = new Post(content: "Test post", userId: userId, username: "testuser")

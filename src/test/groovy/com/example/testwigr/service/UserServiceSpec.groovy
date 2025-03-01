@@ -11,9 +11,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import spock.lang.Specification
 
-@SpringBootTest
-@Import(TestMongoConfig.class)
-@ActiveProfiles("test")
+// @SpringBootTest
+// @Import(TestMongoConfig.class)
+// @ActiveProfiles("test")
 class UserServiceSpec extends Specification {
     
     UserRepository userRepository

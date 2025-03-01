@@ -1,0 +1,31 @@
+# docker/docker-compose-test.yml
+services:
+  mongodb-test:
+    image: mongo:latest
+    container_name: mongodb-test
+    ports:
+      - "27018:27017"  # Using a different port than your main MongoDB
+    environment:
+      - MONGO_INITDB_DATABASE=testdb
+    networks:
+      - test-network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin
+    depends_on:
+      - mongodb-test
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge

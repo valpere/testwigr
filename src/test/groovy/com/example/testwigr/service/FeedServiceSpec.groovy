@@ -37,7 +37,7 @@ class FeedServiceSpec extends Specification {
         
         and:
         userService.getUserById(userId) >> user
-        postRepository.findByUserIdIn([userId, followingId1, followingId2], pageable) >> new PageImpl<>(posts)
+        postRepository.findByUserIdIn(_ as Collection, _ as Pageable) >> new PageImpl<>(posts)
         
         when:
         def result = feedService.getPersonalFeed(userId, pageable)

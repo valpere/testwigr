@@ -12,6 +12,7 @@ import spock.lang.Specification
 class PostServiceSpec extends Specification {
 
     PostRepository postRepository
+
     UserService userService
     PostService postService
 

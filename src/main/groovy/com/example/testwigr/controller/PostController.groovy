@@ -44,18 +44,18 @@ class PostController {
 
     @GetMapping('/{id}')
     @Operation(summary = 'Get a post by ID')
-    ResponseEntity<Post> getPostById(@PathVariable String id) {
+    ResponseEntity<Post> getPostById(@PathVariable("id") String id) {
         Post post = postService.getPostById(id)
         return ResponseEntity.ok(post)
     }
 
     @GetMapping('/user/{userId}')
     ResponseEntity<Page<Post>> getPostsByUserId(
-            @PathVariable String userId,
+            @PathVariable("userId") String userId,
             @PageableDefault(size = 20) Pageable pageable) {
         Page<Post> posts = postService.getPostsByUserId(userId, pageable)
         return ResponseEntity.ok(posts)
-            }
+    }
 
     @GetMapping('/feed')
     ResponseEntity<Page<Post>> getFeed(
@@ -66,12 +66,12 @@ class PostController {
 
         Page<Post> feed = postService.getFeedForUser(user.id, pageable)
         return ResponseEntity.ok(feed)
-            }
+    }
 
     @PutMapping('/{id}')
     @Operation(summary = 'Update a post')
     ResponseEntity<Post> updatePost(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody UpdatePostRequest updatePostRequest,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
@@ -79,11 +79,11 @@ class PostController {
 
         Post updatedPost = postService.updatePost(id, updatePostRequest.content, user.id)
         return ResponseEntity.ok(updatedPost)
-            }
+    }
 
     @DeleteMapping('/{id}')
     @Operation(summary = 'Delete a post')
-    ResponseEntity<?> deletePost(@PathVariable String id, Authentication authentication) {
+    ResponseEntity<?> deletePost(@PathVariable("id") String id, Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
 
@@ -95,7 +95,7 @@ class PostController {
     }
 
     @PostMapping('/{id}/like')
-    ResponseEntity<Post> likePost(@PathVariable String id, Authentication authentication) {
+    ResponseEntity<Post> likePost(@PathVariable("id") String id, Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
 
@@ -104,7 +104,7 @@ class PostController {
     }
 
     @DeleteMapping('/{id}/like')
-    ResponseEntity<Post> unlikePost(@PathVariable String id, Authentication authentication) {
+    ResponseEntity<Post> unlikePost(@PathVariable("id") String id, Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
 
@@ -114,7 +114,7 @@ class PostController {
 
     @PostMapping('/{id}/comments')
     ResponseEntity<Post> addComment(
-            @PathVariable String id,
+            @PathVariable("id") String id,
             @Valid @RequestBody CommentRequest commentRequest,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
@@ -122,10 +122,10 @@ class PostController {
 
         Post post = postService.addComment(id, commentRequest.content, user.id)
         return ResponseEntity.ok(post)
-            }
+    }
 
     @GetMapping('/{id}/comments')
-    ResponseEntity<List<Comment>> getComments(@PathVariable String id) {
+    ResponseEntity<List<Comment>> getComments(@PathVariable("id") String id) {
         List<Comment> comments = postService.getCommentsByPostId(id)
         return ResponseEntity.ok(comments)
     }
@@ -134,21 +134,16 @@ class PostController {
         @NotBlank(message = 'Content cannot be empty')
         @Size(max = 280, message = 'Content cannot exceed 280 characters')
         String content
-
     }
 
     static class UpdatePostRequest {
-
         @NotBlank(message = 'Content cannot be empty')
         @Size(max = 280, message = 'Content cannot exceed 280 characters')
         String content
-
     }
 
     static class CommentRequest {
-
         String content
-
     }
 
 }

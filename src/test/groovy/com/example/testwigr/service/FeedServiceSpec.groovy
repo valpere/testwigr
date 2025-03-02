@@ -12,6 +12,7 @@ import spock.lang.Specification
 class FeedServiceSpec extends Specification {
 
     PostRepository postRepository
+
     UserService userService
     FeedService feedService
 

@@ -7,6 +7,7 @@ import spock.lang.Specification
 class LikeServiceSpec extends Specification {
     
     PostRepository postRepository
+
     UserService userService
     PostService postService
     

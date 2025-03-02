@@ -29,7 +29,6 @@ class UserControllerWebTest extends Specification {
     @Autowired
     ObjectMapper objectMapper
 
-    @MockBean
     UserService userService
 
     def "should get user by username"() {

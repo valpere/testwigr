@@ -10,6 +10,7 @@ import spock.lang.Specification
 class UserServiceSpec extends Specification {
 
     UserRepository userRepository
+
     PasswordEncoder passwordEncoder
     UserService userService
 

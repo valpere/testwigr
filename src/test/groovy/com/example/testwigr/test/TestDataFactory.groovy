@@ -7,16 +7,17 @@ import java.time.LocalDateTime
 
 class TestDataFactory {
 
-    static User createUser(String id = null, String username = "testuser") {
+    static User createUser(String id = null, String username = 'testuser') {
         def user = new User(
             username: username,
             email: "${username}@example.com",
-            password: "password123",
+            password: 'password123',
             displayName: username.capitalize(),
             createdAt: LocalDateTime.now(),
             updatedAt: LocalDateTime.now(),
             following: [] as Set,
-            followers: [] as Set
+            followers: [] as Set,
+            active: true
         )
         if (id) {
             user.id = id
@@ -24,7 +25,7 @@ class TestDataFactory {
         return user
     }
 
-    static Post createPost(String id = null, String content = "Test post", String userId = "123", String username = "testuser") {
+    static Post createPost(String id = null, String content = 'Test post', String userId = '123', String username = 'testuser') {
         def post = new Post(
             content: content,
             userId: userId,
@@ -40,8 +41,7 @@ class TestDataFactory {
         return post
     }
 
-    static Comment createComment(String content = "Test comment", String userId = "123", String username = "testuser") {
+    static Comment createComment(String content = 'Test comment', String userId = '123', String username = 'testuser') {
         return new Comment(content, userId, username)
     }
-
 }

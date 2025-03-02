@@ -6,8 +6,9 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import spock.lang.Specification
 
 class FollowServiceSpec extends Specification {
-    
+
     UserRepository userRepository
+
     PasswordEncoder passwordEncoder
     UserService userService
     

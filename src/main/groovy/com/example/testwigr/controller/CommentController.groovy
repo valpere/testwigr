@@ -17,41 +17,42 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
 @RestController
-@RequestMapping("/api/comments")
-@Tag(name = "Comments", description = "Comment management API")
+@RequestMapping('/api/comments')
+@Tag(name = 'Comments', description = 'Comment management API')
 class CommentController {
-    
+
     private final PostService postService
     private final UserService userService
-    
+
     CommentController(PostService postService, UserService userService) {
         this.postService = postService
         this.userService = userService
     }
-    
-    @PostMapping("/posts/{postId}")
-    @Operation(summary = "Add a comment to a post")
+
+    @PostMapping('/posts/{postId}')
+    @Operation(summary = 'Add a comment to a post')
     ResponseEntity<Post> addComment(
-            @PathVariable String postId,
+            @PathVariable('postId') String postId,
             @Valid @RequestBody CreateCommentRequest createCommentRequest,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
-        
+
         Post post = postService.addComment(postId, createCommentRequest.content, user.id)
         return ResponseEntity.ok(post)
     }
-    
-    @GetMapping("/posts/{postId}")
-    @Operation(summary = "Get all comments for a post")
-    ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable String postId) {
+
+    @GetMapping('/posts/{postId}')
+    @Operation(summary = 'Get all comments for a post')
+    ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable('postId') String postId) {
         List<Comment> comments = postService.getCommentsByPostId(postId)
         return ResponseEntity.ok(comments)
     }
-    
+
     static class CreateCommentRequest {
-        @NotBlank(message = "Content cannot be empty")
-        @Size(max = 280, message = "Content cannot exceed 280 characters")
+        @NotBlank(message = 'Content cannot be empty')
+        @Size(max = 280, message = 'Content cannot exceed 280 characters')
         String content
     }
+
 }

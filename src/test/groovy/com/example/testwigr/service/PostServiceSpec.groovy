@@ -23,13 +23,13 @@ class PostServiceSpec extends Specification {
 
     def "should create a post successfully"() {
         given:
-        def userId = "123"
-        def content = "This is a test post"
-        def user = new User(id: userId, username: "testuser")
+        def userId = '123'
+        def content = 'This is a test post'
+        def user = new User(id: userId, username: 'testuser')
 
         and:
         userService.getUserById(userId) >> user
-        postRepository.save(_) >> { Post post -> post }
+        postRepository.save(_ as Post) >> { Post post -> post }
 
         when:
         def result = postService.createPost(content, userId)
@@ -37,13 +37,13 @@ class PostServiceSpec extends Specification {
         then:
         result.content == content
         result.userId == userId
-        result.username == "testuser"
+        result.username == 'testuser'
     }
 
     def "should get post by id"() {
         given:
-        def postId = "456"
-        def post = new Post(id: postId, content: "Test post", userId: "123", username: "testuser")
+        def postId = '456'
+        def post = new Post(id: postId, content: 'Test post', userId: '123', username: 'testuser')
 
         and:
         postRepository.findById(postId) >> Optional.of(post)
@@ -53,12 +53,12 @@ class PostServiceSpec extends Specification {
 
         then:
         result.id == postId
-        result.content == "Test post"
+        result.content == 'Test post'
     }
 
     def "should throw exception when post id not found"() {
         given:
-        def postId = "nonexistent"
+        def postId = 'nonexistent'
 
         and:
         postRepository.findById(postId) >> Optional.empty()
@@ -72,9 +72,9 @@ class PostServiceSpec extends Specification {
 
     def "should get posts by user id"() {
         given:
-        def userId = "123"
-        def user = new User(id: userId, username: "testuser")
-        def posts = [new Post(content: "Post 1", userId: userId), new Post(content: "Post 2", userId: userId)]
+        def userId = '123'
+        def user = new User(id: userId, username: 'testuser')
+        def posts = [new Post(content: 'Post 1', userId: userId), new Post(content: 'Post 2', userId: userId)]
         def pageable = PageRequest.of(0, 10)
 
         and:
@@ -86,23 +86,24 @@ class PostServiceSpec extends Specification {
 
         then:
         result.content.size() == 2
-        result.content[0].content == "Post 1"
-        result.content[1].content == "Post 2"
+        result.content[0].content == 'Post 1'
+        result.content[1].content == 'Post 2'
     }
 
     def "should get feed for user"() {
         given:
-        def userId = "123"
-        def followingId = "456"
-        def user = new User(id: userId, username: "testuser", following: [followingId] as Set)
+        def userId = '123'
+        def followingId = '456'
+        def user = new User(id: userId, username: 'testuser', following: [followingId] as Set)
         def posts = [
-            new Post(content: "Post 1", userId: userId),
-            new Post(content: "Post 2", userId: followingId)
+            new Post(content: 'Post 1', userId: userId),
+            new Post(content: 'Post 2', userId: followingId)
         ]
         def pageable = PageRequest.of(0, 10)
 
         and:
         userService.getUserById(userId) >> user
+        // Use more flexible argument matcher
         postRepository.findByUserIdIn(_ as Collection, _ as Pageable) >> new PageImpl<>(posts)
 
         when:
@@ -112,52 +113,55 @@ class PostServiceSpec extends Specification {
         result.content.size() == 2
     }
 
+    // Additional tests for like, unlike, and comment methods
     def "should like a post"() {
         given:
-        def postId = "456"
-        def userId = "123"
-        def post = new Post(id: postId, content: "Test post", likes: [] as Set)
+        def postId = '456'
+        def userId = '123'
+        def post = new Post(id: postId, content: 'Test post', likes: [] as Set)
 
         and:
         postRepository.findById(postId) >> Optional.of(post)
-        postRepository.save(_) >> { Post p -> p }
+        postRepository.save(_ as Post) >> { Post p -> p }
 
         when:
         def result = postService.likePost(postId, userId)
 
         then:
         result.likes.contains(userId)
+        result.isLikedBy(userId)
     }
 
     def "should unlike a post"() {
         given:
-        def postId = "456"
-        def userId = "123"
-        def post = new Post(id: postId, content: "Test post", likes: [userId] as Set)
+        def postId = '456'
+        def userId = '123'
+        def post = new Post(id: postId, content: 'Test post', likes: [userId] as Set)
 
         and:
         postRepository.findById(postId) >> Optional.of(post)
-        postRepository.save(_) >> { Post p -> p }
+        postRepository.save(_ as Post) >> { Post p -> p }
 
         when:
         def result = postService.unlikePost(postId, userId)
 
         then:
         !result.likes.contains(userId)
+        !result.isLikedBy(userId)
     }
 
     def "should add a comment to a post"() {
         given:
-        def postId = "456"
-        def userId = "123"
-        def content = "This is a comment"
-        def post = new Post(id: postId, content: "Test post", comments: [])
-        def user = new User(id: userId, username: "testuser")
+        def postId = '456'
+        def userId = '123'
+        def content = 'This is a comment'
+        def post = new Post(id: postId, content: 'Test post', comments: [])
+        def user = new User(id: userId, username: 'testuser')
 
         and:
         postRepository.findById(postId) >> Optional.of(post)
         userService.getUserById(userId) >> user
-        postRepository.save(_) >> { Post p -> p }
+        postRepository.save(_ as Post) >> { Post p -> p }
 
         when:
         def result = postService.addComment(postId, content, userId)
@@ -166,6 +170,6 @@ class PostServiceSpec extends Specification {
         result.comments.size() == 1
         result.comments[0].content == content
         result.comments[0].userId == userId
-        result.comments[0].username == "testuser"
+        result.comments[0].username == 'testuser'
     }
 }

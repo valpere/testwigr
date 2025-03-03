@@ -1,5 +1,6 @@
 package com.example.testwigr.controller
 
+import com.example.testwigr.config.TestSecurityConfig
 import com.example.testwigr.model.User
 import com.example.testwigr.service.UserService
 import com.example.testwigr.test.TestDataFactory
@@ -7,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.http.MediaType
+import org.springframework.context.annotation.Import
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.ActiveProfiles
@@ -16,55 +17,55 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import spock.lang.Specification
 
-import static org.mockito.ArgumentMatchers.any
 import static org.mockito.Mockito.when
 
 @WebMvcTest(UserController.class)
-@ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
+@ActiveProfiles('test')
 class UserControllerWebTest extends Specification {
 
     @Autowired
     MockMvc mockMvc
 
-    @Autowired
-    ObjectMapper objectMapper
-
+    @MockBean
     UserService userService
 
+    @WithMockUser(username = 'testuser')
     def "should get user by username"() {
         given:
-        def username = "testuser"
-        def user = TestDataFactory.createUser("123", username)
-        
+        def username = 'testuser'
+        def user = TestDataFactory.createUser('123', username)
+
         when(userService.getUserByUsername(username)).thenReturn(user)
-        
+
         when:
         def result = mockMvc.perform(
             MockMvcRequestBuilders.get("/api/users/${username}")
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
         )
-        
+
         then:
         result.andExpect(MockMvcResultMatchers.status().isOk())
               .andExpect(MockMvcResultMatchers.jsonPath('$.username').value(username))
     }
-    
-    @WithMockUser(username = "testuser")
+
+    @WithMockUser(username = 'testuser')
     def "should get current user"() {
         given:
-        def username = "testuser"
-        def user = TestDataFactory.createUser("123", username)
-        
+        def username = 'testuser'
+        def user = TestDataFactory.createUser('123', username)
+
         when(userService.getUserByUsername(username)).thenReturn(user)
-        
+
         when:
         def result = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/users/me")
+            MockMvcRequestBuilders.get('/api/users/me')
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
         )
-        
+
         then:
         result.andExpect(MockMvcResultMatchers.status().isOk())
               .andExpect(MockMvcResultMatchers.jsonPath('$.username').value(username))
     }
+
 }

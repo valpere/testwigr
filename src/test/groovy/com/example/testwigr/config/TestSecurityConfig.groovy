@@ -3,18 +3,16 @@ package com.example.testwigr.config
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
-import org.springframework.context.annotation.Profile
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
 
 @TestConfiguration
-@Profile('test')
+@EnableWebSecurity
 class TestSecurityConfig {
 
     @Bean
@@ -23,7 +21,11 @@ class TestSecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+            .authorizeHttpRequests(authorize -> {
+                authorize.requestMatchers('/api/auth/**').permitAll()
+                authorize.requestMatchers('/api/users/**').permitAll()
+                authorize.anyRequest().authenticated()
+            })
 
         return http.build()
     }
@@ -39,11 +41,11 @@ class TestSecurityConfig {
 
         return new InMemoryUserDetailsManager(userDetails)
     }
-
+    
     @Bean
     @Primary
-    PasswordEncoder testPasswordEncoder() {
-        return new BCryptPasswordEncoder()
+    org.springframework.security.crypto.password.PasswordEncoder testPasswordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()
     }
 
 }

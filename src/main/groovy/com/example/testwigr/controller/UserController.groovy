@@ -30,7 +30,10 @@ class UserController {
     }
 
     @PutMapping('/{id}')
-    ResponseEntity<User> updateUser(@PathVariable('id') String id, @RequestBody User userDetails, Authentication authentication) {
+    ResponseEntity<User> updateUser(
+            @PathVariable('id') String id,
+            @RequestBody User userDetails,
+            Authentication authentication) {
         // Changed variable name from userDetails to authUserDetails to avoid conflict
         UserDetails authUserDetails = (UserDetails) authentication.getPrincipal()
         User authUser = userService.getUserByUsername(authUserDetails.getUsername())
@@ -41,7 +44,7 @@ class UserController {
 
         User updatedUser = userService.updateUser(id, userDetails)
         return ResponseEntity.ok(updatedUser)
-    }
+            }
 
     @DeleteMapping('/{id}')
     ResponseEntity<?> deleteUser(@PathVariable('id') String id, Authentication authentication) {
@@ -58,7 +61,10 @@ class UserController {
     }
 
     @PostMapping('/{id}/follow/{followingId}')
-    ResponseEntity<User> followUser(@PathVariable('id') String id, @PathVariable('followingId') String followingId, Authentication authentication) {
+    ResponseEntity<User> followUser(
+            @PathVariable('id') String id,
+            @PathVariable('followingId') String followingId,
+            Authentication authentication) {
         // Changed variable name from userDetails to authUserDetails to avoid conflict
         UserDetails authUserDetails = (UserDetails) authentication.getPrincipal()
         User authUser = userService.getUserByUsername(authUserDetails.getUsername())
@@ -69,10 +75,13 @@ class UserController {
 
         User updatedUser = userService.followUser(id, followingId)
         return ResponseEntity.ok(updatedUser)
-    }
+            }
 
     @DeleteMapping('/{id}/unfollow/{followingId}')
-    ResponseEntity<User> unfollowUser(@PathVariable('id') String id, @PathVariable('followingId') String followingId, Authentication authentication) {
+    ResponseEntity<User> unfollowUser(
+            @PathVariable('id') String id,
+            @PathVariable('followingId') String followingId,
+            Authentication authentication) {
         // Changed variable name from userDetails to authUserDetails to avoid conflict
         UserDetails authUserDetails = (UserDetails) authentication.getPrincipal()
         User authUser = userService.getUserByUsername(authUserDetails.getUsername())
@@ -83,7 +92,7 @@ class UserController {
 
         User updatedUser = userService.unfollowUser(id, followingId)
         return ResponseEntity.ok(updatedUser)
-    }
+            }
 
     @GetMapping('/me')
     @Operation(summary = 'Get current user profile')
@@ -109,7 +118,7 @@ class UserController {
 
         User updatedUser = userService.updateUser(user.id, userToUpdate)
         return ResponseEntity.ok(updatedUser)
-    }
+            }
 
     @DeleteMapping('/me')
     @Operation(summary = 'Delete current user')
@@ -125,10 +134,12 @@ class UserController {
     }
 
     static class UpdateUserRequest {
+
         String displayName
         String bio
         String email
         String password
+
     }
 
 }

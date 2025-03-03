@@ -62,11 +62,16 @@ Full API flow tests that simulate real user interactions from login to using fea
 
 ### Tests failed:
 
+- ./gradlew test --tests "com.example.testwigr.controller.UserControllerIntegrationTest"
+- ./gradlew test --tests "com.example.testwigr.controller.UserControllerWebTest"
 - ./gradlew test --tests "com.example.testwigr.controller.*" --info
+- ./gradlew test --tests "com.example.testwigr.security.AuthenticationFlowTest"
+- ./gradlew test --tests "com.example.testwigr.security.SecurityIntegrationSpec"
+- ./gradlew test --tests "com.example.testwigr.security.*" --info
 
 ## Test Data
 
-We use a `TestDataFactory` class to provide consistent test data across all tests. 
+We use a `TestDataFactory` class to provide consistent test data across all tests.
 
 This ensures:
 

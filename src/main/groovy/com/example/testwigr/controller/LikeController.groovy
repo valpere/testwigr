@@ -1,4 +1,3 @@
-
 package com.example.testwigr.controller
 
 import com.example.testwigr.exception.ResourceNotFoundException
@@ -12,68 +11,68 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/likes")
+@RequestMapping('/api/likes')
 class LikeController {
-    
+
     private final PostService postService
     private final UserService userService
-    
+
     LikeController(PostService postService, UserService userService) {
         this.postService = postService
         this.userService = userService
     }
-    
-    @PostMapping("/posts/{postId}")
+
+    @PostMapping('/posts/{postId}')
     ResponseEntity<Map<String, Object>> likePost(
-            @PathVariable String postId,
+            @PathVariable('postId') String postId,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
-        
+
         Post post = postService.likePost(postId, user.id)
-        
+
         return ResponseEntity.ok([
             success: true,
             likeCount: post.getLikeCount(),
             isLiked: true
         ])
     }
-    
-    @DeleteMapping("/posts/{postId}")
+
+    @DeleteMapping('/posts/{postId}')
     ResponseEntity<Map<String, Object>> unlikePost(
-            @PathVariable String postId,
+            @PathVariable('postId') String postId,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
-        
+
         Post post = postService.unlikePost(postId, user.id)
-        
+
         return ResponseEntity.ok([
             success: true,
             likeCount: post.getLikeCount(),
             isLiked: false
         ])
     }
-    
-    @GetMapping("/posts/{postId}")
+
+    @GetMapping('/posts/{postId}')
     ResponseEntity<Map<String, Object>> getLikeStatus(
-            @PathVariable String postId,
+            @PathVariable('postId') String postId,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
-        
+
         Post post = postService.getPostById(postId)
-        
+
         return ResponseEntity.ok([
             likeCount: post.getLikeCount(),
             isLiked: post.isLikedBy(user.id)
         ])
     }
-    
-    @GetMapping("/posts/{postId}/users")
-    ResponseEntity<List<User>> getLikedUsers(@PathVariable String postId) {
+
+    @GetMapping('/posts/{postId}/users')
+    ResponseEntity<List<User>> getLikedUsers(@PathVariable('postId') String postId) {
         Post post = postService.getPostById(postId)
-        
+
         List<User> likedUsers = []
         for (String userId : post.likes) {
             try {
@@ -83,7 +82,8 @@ class LikeController {
                 // Skip users that might have been deleted
             }
         }
-        
+
         return ResponseEntity.ok(likedUsers)
     }
+
 }

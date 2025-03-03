@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.*
 import jakarta.validation.Valid
 
 @RestController
-@RequestMapping("/api/auth")
-@Tag(name = "Authentication", description = "Authentication API")
+@RequestMapping('/api/auth')
+@Tag(name = 'Authentication', description = 'Authentication API')
 class AuthController {
 
     private final UserService userService
@@ -26,8 +26,8 @@ class AuthController {
         this.authenticationManager = authenticationManager
     }
 
-    @PostMapping("/register")
-    @Operation(summary = "Register a new user")
+    @PostMapping('/register')
+    @Operation(summary = 'Register a new user')
     ResponseEntity<Map<String, Object>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         User user = new User(
             username: registerRequest.username,
@@ -45,8 +45,8 @@ class AuthController {
         ])
     }
 
-    @PostMapping("/login")
-    @Operation(summary = "Log in a user")
+    @PostMapping('/login')
+    @Operation(summary = 'Log in a user')
     ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
@@ -61,30 +61,35 @@ class AuthController {
 
         return ResponseEntity.ok([
             success: true,
-            message: "User logged in successfully"
+            message: 'User logged in successfully'
         ])
     }
 
-    @PostMapping("/logout")
-    @Operation(summary = "Log out the current user")
+    @PostMapping('/logout')
+    @Operation(summary = 'Log out the current user')
     ResponseEntity<Map<String, Object>> logout() {
         SecurityContextHolder.clearContext()
 
         return ResponseEntity.ok([
             success: true,
-            message: "User logged out successfully"
+            message: 'User logged out successfully'
         ])
     }
 
     static class RegisterRequest {
+
         String username
         String email
         String password
         String displayName
+
     }
 
     static class LoginRequest {
+
         String username
         String password
+
     }
+
 }

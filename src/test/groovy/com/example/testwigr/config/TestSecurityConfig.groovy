@@ -56,7 +56,7 @@ class TestSecurityConfig {
 
     @Bean
     @Primary
-    UserDetailsService testUserDetailsService() {
+    static UserDetailsService testUserDetailsService() {
         def userDetails = User.withDefaultPasswordEncoder()
             .username('testuser')
             .password('password')
@@ -74,13 +74,13 @@ class TestSecurityConfig {
 
     @Bean
     @Primary
-    PasswordEncoder testPasswordEncoder() {
+    static PasswordEncoder testPasswordEncoder() {
         return new BCryptPasswordEncoder()
     }
 
     @Bean
     @Primary
-    AuthenticationManager testAuthenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    static AuthenticationManager testAuthenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager()
     }
 

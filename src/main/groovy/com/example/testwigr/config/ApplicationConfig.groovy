@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Primary
 class ApplicationConfig {
     @Bean
     @Primary
-    FeedService feedService(PostRepository postRepository, 
-                          @Lazy UserService userService) {
+    static FeedService feedService(PostRepository postRepository,
+                                   @Lazy UserService userService) {
         return new FeedService(postRepository, userService)
     }
 }

@@ -52,7 +52,7 @@ class ControllerTestSecurityConfig {
 
     @Bean
     @Primary
-    UserDetailsService testUserDetailsService() {
+    static UserDetailsService testUserDetailsService() {
         def userDetails = User.withDefaultPasswordEncoder()
             .username('testuser')
             .password('password')
@@ -70,7 +70,7 @@ class ControllerTestSecurityConfig {
 
     @Bean
     @Primary
-    PasswordEncoder testPasswordEncoder() {
+    static PasswordEncoder testPasswordEncoder() {
         return new BCryptPasswordEncoder()
     }
 

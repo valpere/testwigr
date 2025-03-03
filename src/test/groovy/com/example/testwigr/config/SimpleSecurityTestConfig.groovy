@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain
 class SimpleSecurityTestConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    static SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> {
@@ -31,7 +31,7 @@ class SimpleSecurityTestConfig {
     }
 
     @Bean
-    UserDetailsService userDetailsService() {
+    static UserDetailsService userDetailsService() {
         def userDetails = User.withDefaultPasswordEncoder()
             .username('testuser')
             .password('password')
@@ -42,7 +42,7 @@ class SimpleSecurityTestConfig {
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() {
+    static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder()
     }
 }

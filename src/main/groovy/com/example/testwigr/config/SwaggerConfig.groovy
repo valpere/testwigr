@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration
 class SwaggerConfig {
     
     @Bean
-    OpenAPI openAPI() {
+    static OpenAPI openAPI() {
         return new OpenAPI()
             .info(new Info()
                 .title("Twitter-Like API")

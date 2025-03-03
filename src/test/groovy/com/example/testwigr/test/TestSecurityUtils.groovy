@@ -1,12 +1,15 @@
 package com.example.testwigr.test
 
+import com.example.testwigr.model.User
+import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import jakarta.servlet.http.HttpServletRequest
+import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 
@@ -50,27 +53,66 @@ class TestSecurityUtils {
             .getPayload()
             .getSubject()
     }
-    
-    // Mock authentication for a user
-    static Authentication mockAuthentication(String username, String... roles) {
-        def authorities = roles.collect { new SimpleGrantedAuthority("ROLE_${it}") }
-        UserDetails userDetails = User.builder()
-            .username(username)
-            .password("password")
-            .authorities(authorities)
+
+    // Add JWT token to a MockMvc request builder
+    static MockHttpServletRequestBuilder addJwtToken(MockHttpServletRequestBuilder requestBuilder, String token) {
+        return requestBuilder.header('Authorization', "Bearer ${token}")
+    }
+
+    // Create a mock authenticated request with JWT token
+    static MockHttpServletRequest createAuthenticatedRequest(String token) {
+        MockHttpServletRequest request = new MockHttpServletRequest()
+        request.addHeader('Authorization', "Bearer ${token}")
+        return request
+    }
+
+    // Check if token is expired
+    static boolean isTokenExpired(String token, String secret) {
+        Claims claims = Jwts.parser()
+            .verifyWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
             .build()
-            
-        return new UsernamePasswordAuthenticationToken(userDetails, null, authorities)
+            .parseSignedClaims(token)
+            .getPayload()
+
+        return claims.getExpiration().before(new Date())
     }
-    
-    // Set authentication in SecurityContext - useful for tests
-    static void setAuthentication(String username, String... roles) {
-        SecurityContextHolder.getContext().setAuthentication(mockAuthentication(username, roles))
+
+    // Set up authentication context for testing
+    static void setupAuthentication(UserDetails userDetails) {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+            userDetails,
+            null,
+            userDetails.getAuthorities()
+        )
+        SecurityContextHolder.getContext().setAuthentication(auth)
     }
-    
-    // Add authentication header to a request
-    static MockHttpServletRequestBuilder addToken(MockHttpServletRequestBuilder request, String token) {
-        return request.header("Authorization", "Bearer ${token}")
+
+    // Create authentication from user
+    static Authentication createAuthentication(User user) {
+        return new UsernamePasswordAuthenticationToken(
+            user.username,
+            null,
+            [new SimpleGrantedAuthority('ROLE_USER')]
+        )
+    }
+
+    static boolean isValidToken(String token, String secret) {
+        try {
+            Claims claims = Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+
+            // Check if token is expired
+            return !claims.getExpiration().before(new Date())
+        } catch (Exception e) {
+            return false
+        }
+    }
+    // Clean up authentication after test
+    static void clearAuthentication() {
+        SecurityContextHolder.clearContext()
     }
 
 }

@@ -13,7 +13,7 @@ class IntegrationTestConfig {
     
     @Bean
     @Primary
-    PasswordEncoder passwordEncoder() {
+    static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder()
     }
 }

@@ -4,6 +4,8 @@ import com.example.testwigr.model.User
 import com.example.testwigr.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -78,9 +80,16 @@ class AuthController {
 
     static class RegisterRequest {
 
+        @NotBlank(message = 'Username cannot be empty')
         String username
+
+        @NotBlank(message = 'Email cannot be empty')
+        @Email(message = 'Email must be valid')
         String email
+
+        @NotBlank(message = 'Password cannot be empty')
         String password
+
         String displayName
 
     }

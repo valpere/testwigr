@@ -12,12 +12,12 @@ import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory
 class TestMongoConfig {
 
     @Bean
-    MongoDatabaseFactory mongoDatabaseFactory() {
+    static MongoDatabaseFactory mongoDatabaseFactory() {
         return new SimpleMongoClientDatabaseFactory('mongodb://localhost:27018/testdb')
     }
 
     @Bean
-    MongoTemplate mongoTemplate(MongoDatabaseFactory factory) {
+    static MongoTemplate mongoTemplate(MongoDatabaseFactory factory) {
         return new MongoTemplate(factory)
     }
 

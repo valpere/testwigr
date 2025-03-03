@@ -1,6 +1,5 @@
 package com.example.testwigr.controller
 
-import com.example.testwigr.config.TestSecurityConfig
 import com.example.testwigr.model.User
 import com.example.testwigr.service.UserService
 import com.example.testwigr.test.TestDataFactory
@@ -9,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.ActiveProfiles
@@ -17,10 +17,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import spock.lang.Specification
 
+import static org.mockito.ArgumentMatchers.anyString
 import static org.mockito.Mockito.when
 
-@WebMvcTest(UserController.class)
-@Import(TestSecurityConfig.class)
+@WebMvcTest(controllers = [UserController.class])
 @ActiveProfiles('test')
 class UserControllerWebTest extends Specification {
 
@@ -30,13 +30,16 @@ class UserControllerWebTest extends Specification {
     @MockBean
     UserService userService
 
+    @MockBean
+    AuthenticationManager authenticationManager
+
     @WithMockUser(username = 'testuser')
     def "should get user by username"() {
         given:
         def username = 'testuser'
         def user = TestDataFactory.createUser('123', username)
 
-        when(userService.getUserByUsername(username)).thenReturn(user)
+        when(userService.getUserByUsername(anyString())).thenReturn(user)
 
         when:
         def result = mockMvc.perform(
@@ -55,7 +58,7 @@ class UserControllerWebTest extends Specification {
         def username = 'testuser'
         def user = TestDataFactory.createUser('123', username)
 
-        when(userService.getUserByUsername(username)).thenReturn(user)
+        when(userService.getUserByUsername(anyString())).thenReturn(user)
 
         when:
         def result = mockMvc.perform(

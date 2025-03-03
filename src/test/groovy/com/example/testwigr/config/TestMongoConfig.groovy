@@ -1,11 +1,24 @@
 package com.example.testwigr.config
 
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Profile
+import org.springframework.data.mongodb.MongoDatabaseFactory
+import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory
 
 @TestConfiguration
-@ActiveProfiles("test")
+@Profile('test')
 class TestMongoConfig {
-    // This class is now just a marker for test configurations
-    // The actual MongoDB connection happens through the Docker container
+
+    @Bean
+    MongoDatabaseFactory mongoDatabaseFactory() {
+        return new SimpleMongoClientDatabaseFactory('mongodb://localhost:27018/testdb')
+    }
+
+    @Bean
+    MongoTemplate mongoTemplate(MongoDatabaseFactory factory) {
+        return new MongoTemplate(factory)
+    }
+
 }

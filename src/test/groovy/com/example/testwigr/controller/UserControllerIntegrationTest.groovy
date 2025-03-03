@@ -4,40 +4,15 @@ import com.example.testwigr.model.User
 import com.example.testwigr.repository.PostRepository
 import com.example.testwigr.repository.UserRepository
 import com.example.testwigr.test.TestDataFactory
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
-import org.springframework.http.MediaType
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
-import spock.lang.Specification
 
 @SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles('test')
-class UserControllerIntegrationTest extends Specification {
-
-    @TestConfiguration
-    static class TestConfig {
-
-        @Bean
-        @Primary
-        PasswordEncoder testPasswordEncoder() {
-            return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()
-        }
-
-    }
-
-    @Autowired
-    MockMvc mockMvc
+class UserControllerIntegrationTest extends ControllerTestBase {
 
     @Autowired
     UserRepository userRepository
@@ -62,7 +37,7 @@ class UserControllerIntegrationTest extends Specification {
     def "should get user profile"() {
         when: 'requesting user profile'
         def result = mockMvc.perform(
-            MockMvcRequestBuilders.get('/api/users/testuser')
+            withAuth(MockMvcRequestBuilders.get('/api/users/testuser'))
         )
 
         then: 'user profile is returned'
@@ -71,16 +46,36 @@ class UserControllerIntegrationTest extends Specification {
               .andExpect(MockMvcResultMatchers.jsonPath('$.email').value('testuser@example.com'))
     }
 
-    @WithMockUser(username = 'testuser')
     def "should get current user profile"() {
-        when: 'requesting current user profile'
+        when: 'requesting current user profile with valid auth token'
         def result = mockMvc.perform(
-            MockMvcRequestBuilders.get('/api/users/me')
+            withAuth(MockMvcRequestBuilders.get('/api/users/me'))
         )
 
         then: 'current user profile is returned'
         result.andExpect(MockMvcResultMatchers.status().isOk())
               .andExpect(MockMvcResultMatchers.jsonPath('$.username').value('testuser'))
+    }
+
+    def "should update current user profile"() {
+        given: 'update data'
+        def updateRequest = [
+            displayName: 'Updated Name',
+            bio: 'New bio text'
+        ]
+
+        when: 'updating current user profile with valid auth token'
+        def result = mockMvc.perform(
+            jsonRequest(
+                withAuth(MockMvcRequestBuilders.put('/api/users/me')),
+                updateRequest
+            )
+        )
+
+        then: 'user profile is updated correctly'
+        result.andExpect(MockMvcResultMatchers.status().isOk())
+              .andExpect(MockMvcResultMatchers.jsonPath('$.displayName').value('Updated Name'))
+              .andExpect(MockMvcResultMatchers.jsonPath('$.bio').value('New bio text'))
     }
 
 }

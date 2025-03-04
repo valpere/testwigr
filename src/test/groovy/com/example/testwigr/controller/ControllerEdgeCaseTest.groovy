@@ -1,6 +1,6 @@
 package com.example.testwigr.controller
 
-
+import com.example.testwigr.model.User
 import com.example.testwigr.repository.PostRepository
 import com.example.testwigr.repository.UserRepository
 import com.example.testwigr.test.TestDataFactory
@@ -99,9 +99,7 @@ class ControllerEdgeCaseTest extends Specification {
         then: 'Registration fails with appropriate error'
         duplicateEmailResult.andExpect(MockMvcResultMatchers.status().isConflict())
         
-        // Note: The application currently allows empty usernames, so we're testing for
-        // what actually happens, not what we might expect
-        when: 'Registering with empty username (currently allowed)'
+        when: 'Registering with empty username'
         def invalidRequest = [
             username: '',
             email: 'valid@example.com',
@@ -115,8 +113,9 @@ class ControllerEdgeCaseTest extends Specification {
                 .content(objectMapper.writeValueAsString(invalidRequest))
         )
         
-        then: 'Registration actually succeeds (not ideal, but it\'s the current behavior)'
-        invalidResult.andExpect(MockMvcResultMatchers.status().isOk())
+        then: 'Registration fails with bad request'
+        invalidResult.andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath('$.message').value('Validation failed'))
     }
     
     def "should handle edge cases in post creation"() {
@@ -153,8 +152,9 @@ class ControllerEdgeCaseTest extends Specification {
                 .content(objectMapper.writeValueAsString(emptyPostRequest))
         )
         
-        then: 'Post creation fails with validation error (returns 500 currently)'
-        emptyPostResult.andExpect(MockMvcResultMatchers.status().isInternalServerError())
+        then: 'Post creation fails with validation error'
+        emptyPostResult.andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath('$.message').value('Validation failed'))
         
         when: 'Creating a post with content exceeding maximum length'
         def longPostRequest = [
@@ -169,7 +169,8 @@ class ControllerEdgeCaseTest extends Specification {
         )
         
         then: 'Post creation fails with validation error'
-        longPostResult.andExpect(MockMvcResultMatchers.status().isInternalServerError())
+        longPostResult.andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath('$.message').value('Validation failed'))
         
         when: 'Creating a post with exactly the maximum length'
         def maxLengthPostRequest = [
@@ -191,7 +192,7 @@ class ControllerEdgeCaseTest extends Specification {
         given: 'A logged in user with a post'
         def user = TestDataFactory.createUser(null, 'updateuser')
         user.password = passwordEncoder.encode('password123')
-//        def savedUser = userRepository.save(user)
+        def savedUser = userRepository.save(user)
         
         def loginRequest = [
             username: 'updateuser',
@@ -335,8 +336,9 @@ class ControllerEdgeCaseTest extends Specification {
                 .content(objectMapper.writeValueAsString(emptyCommentRequest))
         )
         
-        then: 'Comment creation fails with validation error (returns 500 currently)'
-        emptyCommentResult.andExpect(MockMvcResultMatchers.status().isInternalServerError())
+        then: 'Comment creation fails with validation error'
+        emptyCommentResult.andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath('$.message').value('Validation failed'))
         
         when: 'Adding a comment with maximum length content'
         def maxCommentRequest = [
@@ -432,4 +434,5 @@ class ControllerEdgeCaseTest extends Specification {
         then: 'Follow operation fails with not found error'
         nonExistentFollowResult.andExpect(MockMvcResultMatchers.status().isNotFound())
     }
+
 }

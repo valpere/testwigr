@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
@@ -17,13 +18,11 @@ import jakarta.servlet.http.HttpServletResponse
 import java.nio.charset.StandardCharsets
 import java.util.Date
 
-class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+class JwtAuthenticationFilterMock extends UsernamePasswordAuthenticationFilter {
 
-    private final AuthenticationManager authenticationManager
     private final String jwtSecret
 
-    JwtAuthenticationFilter(AuthenticationManager authenticationManager, String jwtSecret) {
-        this.authenticationManager = authenticationManager
+    JwtAuthenticationFilterMock(String jwtSecret) {
         this.jwtSecret = jwtSecret
         setFilterProcessesUrl('/api/auth/login')
     }
@@ -32,21 +31,12 @@ class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
             LoginRequest loginRequest = new ObjectMapper().readValue(request.getInputStream(), LoginRequest)
-
-            if (authenticationManager == null) {
-                // For test environments, create a suitable response instead of throwing an exception
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)
-                response.setContentType("application/json")
-                response.getWriter().write("{\"error\":\"Authentication manager not available\",\"message\":\"This is likely happening in test mode\"}");
-                return null;
-            }
-
-            return authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.username,
-                            loginRequest.password,
-                            []
-                    )
+            
+            // For testing, automatically authenticate with ROLE_USER
+            return new UsernamePasswordAuthenticationToken(
+                loginRequest.username,
+                null,
+                [new SimpleGrantedAuthority("ROLE_USER")]
             )
         } catch (IOException e) {
             throw new RuntimeException(e)
@@ -56,10 +46,10 @@ class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain, Authentication authResult) throws IOException {
-        UserDetails userDetails = (UserDetails) authResult.getPrincipal()
+        String username = authResult.getName()
 
         String token = Jwts.builder()
-                .subject(userDetails.getUsername())
+                .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 864000000)) // 10 days
                 .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
@@ -70,13 +60,12 @@ class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.characterEncoding = 'UTF-8'
 
         def responseBody = [
-                username: userDetails.getUsername(),
+                username: username,
                 token: token
         ]
 
         response.writer.write(new ObjectMapper().writeValueAsString(responseBody))
     }
-
 
     static class LoginRequest {
         String username

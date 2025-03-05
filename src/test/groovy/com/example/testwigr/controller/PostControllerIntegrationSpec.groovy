@@ -38,8 +38,11 @@ class PostControllerIntegrationSpec extends Specification {
         postRepository.deleteAll()
         userRepository.deleteAll()
 
-        // Create a test user
-        def user = TestDataFactory.createUser(null, "integrationuser")
+        // Reset TestDataFactory IDs
+        TestDataFactory.resetIds()
+
+        // Create a test user with consistent ID
+        def user = TestDataFactory.createUser("integration-user-id", "integrationuser")
         userRepository.save(user)
     }
 
@@ -51,40 +54,44 @@ class PostControllerIntegrationSpec extends Specification {
 
         when: "Create a new post"
         def createResult = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/posts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createPostRequest))
+                MockMvcRequestBuilders.post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createPostRequest))
         )
 
         then: "Post is created successfully"
         createResult.andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath('$.content').value("Integration test post"))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.userId').value(user.id))
 
-        def postId = objectMapper.readValue(
-            createResult.andReturn().response.contentAsString,
-            Map
-        ).id
+        // Extract the post ID from the response
+        def postResponse = objectMapper.readValue(
+                createResult.andReturn().response.contentAsString,
+                Map
+        )
+        def postId = postResponse.id
 
         when: "Retrieve the created post"
         def getResult = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/posts/${postId}")
+                MockMvcRequestBuilders.get("/api/posts/${postId}")
         )
 
         then: "Post details are returned correctly"
         getResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.content').value("Integration test post"))
-            .andExpect(MockMvcResultMatchers.jsonPath('$.userId').value(user.id))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.content').value("Integration test post"))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.userId').value(user.id))
     }
 
     @WithMockUser(username = "integrationuser")
     def "should like and unlike a post"() {
         given:
         def user = userRepository.findByUsername("integrationuser").get()
-        def post = TestDataFactory.createPost(null, "Post to like", user.id, user.username)
+        def post = TestDataFactory.createPost("test-post-id", "Post to like", user.id, user.username)
         postRepository.save(post)
 
         when: "User likes the post"
         def likeResult = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/posts/${post.id}/like")
+                MockMvcRequestBuilders.post("/api/posts/${post.id}/like")
         )
 
         then: "Like operation succeeds"
@@ -92,17 +99,24 @@ class PostControllerIntegrationSpec extends Specification {
 
         when: "Retrieve the post"
         def getResult = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/posts/${post.id}")
+                MockMvcRequestBuilders.get("/api/posts/${post.id}")
         )
 
         then: "Post shows as liked"
         getResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.likes').isArray())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.likes[0]').value(user.id))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.likes').isArray())
+
+        // Extract the post response and check likes
+        def postResponse = objectMapper.readValue(
+                getResult.andReturn().response.contentAsString,
+                Map
+        )
+        postResponse.likes.size() > 0
+        postResponse.likes.contains(user.id)
 
         when: "User unlikes the post"
         def unlikeResult = mockMvc.perform(
-            MockMvcRequestBuilders.delete("/api/posts/${post.id}/like")
+                MockMvcRequestBuilders.delete("/api/posts/${post.id}/like")
         )
 
         then: "Unlike operation succeeds"
@@ -110,11 +124,17 @@ class PostControllerIntegrationSpec extends Specification {
 
         when: "Retrieve the post again"
         def getFinalResult = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/posts/${post.id}")
+                MockMvcRequestBuilders.get("/api/posts/${post.id}")
         )
 
         then: "Post no longer shows as liked"
         getFinalResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.likes').isEmpty())
+
+        // Extract the post response and check likes are gone
+        def finalPostResponse = objectMapper.readValue(
+                getFinalResult.andReturn().response.contentAsString,
+                Map
+        )
+        finalPostResponse.likes.isEmpty()
     }
 }

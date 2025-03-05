@@ -24,7 +24,7 @@ class LikeController {
 
     @PostMapping('/posts/{postId}')
     ResponseEntity<Map<String, Object>> likePost(
-            @PathVariable('postId') String postId,
+            @PathVariable("postId") String postId,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
@@ -32,15 +32,15 @@ class LikeController {
         Post post = postService.likePost(postId, user.id)
 
         return ResponseEntity.ok([
-            success: true,
-            likeCount: post.getLikeCount(),
-            isLiked: true
-        ])
+                success: true,
+                likeCount: post.getLikeCount(),
+                isLiked: true
+        ] as Map<String, Object>)
     }
 
     @DeleteMapping('/posts/{postId}')
     ResponseEntity<Map<String, Object>> unlikePost(
-            @PathVariable('postId') String postId,
+            @PathVariable("postId") String postId,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
@@ -48,15 +48,15 @@ class LikeController {
         Post post = postService.unlikePost(postId, user.id)
 
         return ResponseEntity.ok([
-            success: true,
-            likeCount: post.getLikeCount(),
-            isLiked: false
-        ])
+                success: true,
+                likeCount: post.getLikeCount(),
+                isLiked: false
+        ] as Map<String, Object>)
     }
 
     @GetMapping('/posts/{postId}')
     ResponseEntity<Map<String, Object>> getLikeStatus(
-            @PathVariable('postId') String postId,
+            @PathVariable("postId") String postId,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal()
         User user = userService.getUserByUsername(userDetails.getUsername())
@@ -64,13 +64,13 @@ class LikeController {
         Post post = postService.getPostById(postId)
 
         return ResponseEntity.ok([
-            likeCount: post.getLikeCount(),
-            isLiked: post.isLikedBy(user.id)
-        ])
+                likeCount: post.getLikeCount(),
+                isLiked: post.isLikedBy(user.id)
+        ] as Map<String, Object>)
     }
 
     @GetMapping('/posts/{postId}/users')
-    ResponseEntity<List<User>> getLikedUsers(@PathVariable('postId') String postId) {
+    ResponseEntity<List<User>> getLikedUsers(@PathVariable("postId") String postId) {
         Post post = postService.getPostById(postId)
 
         List<User> likedUsers = []
@@ -85,5 +85,4 @@ class LikeController {
 
         return ResponseEntity.ok(likedUsers)
     }
-
 }

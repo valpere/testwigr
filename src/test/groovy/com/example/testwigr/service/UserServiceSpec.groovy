@@ -3,6 +3,7 @@ package com.example.testwigr.service
 import com.example.testwigr.exception.ResourceNotFoundException
 import com.example.testwigr.exception.UserAlreadyExistsException
 import com.example.testwigr.model.User
+import com.example.testwigr.repository.PostRepository
 import com.example.testwigr.repository.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import spock.lang.Specification
@@ -10,23 +11,24 @@ import spock.lang.Specification
 class UserServiceSpec extends Specification {
 
     UserRepository userRepository
-
+    PostRepository postRepository
     PasswordEncoder passwordEncoder
     UserService userService
 
     def setup() {
         userRepository = Mock(UserRepository)
         passwordEncoder = Mock(PasswordEncoder)
-        userService = new UserService(userRepository, passwordEncoder)
+        postRepository = Mock(PostRepository)
+        userService = new UserService(userRepository, passwordEncoder, postRepository)
     }
 
     def "should create a new user successfully"() {
         given:
         def userToCreate = new User(
-            username: 'testuser',
-            email: 'test@example.com',
-            password: 'password123',
-            displayName: 'Test User'
+                username: 'testuser',
+                email: 'test@example.com',
+                password: 'password123',
+                displayName: 'Test User'
         )
 
         and:
@@ -48,9 +50,9 @@ class UserServiceSpec extends Specification {
     def "should throw exception when username already exists"() {
         given:
         def userToCreate = new User(
-            username: 'existinguser',
-            email: 'new@example.com',
-            password: 'password123'
+                username: 'existinguser',
+                email: 'new@example.com',
+                password: 'password123'
         )
 
         and:
@@ -66,9 +68,9 @@ class UserServiceSpec extends Specification {
     def "should throw exception when email already exists"() {
         given:
         def userToCreate = new User(
-            username: 'newuser',
-            email: 'existing@example.com',
-            password: 'password123'
+                username: 'newuser',
+                email: 'existing@example.com',
+                password: 'password123'
         )
 
         and:

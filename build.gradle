@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.example'
-version = '0.0.1-SNAPSHOT'
+version = '0.1.0-SNAPSHOT'
 
 java {
     toolchain {
@@ -17,6 +17,17 @@ repositories {
     mavenCentral()
 }
 
+compileGroovy {
+    // Enable parameter names in the compiled bytecode
+    groovyOptions.configurationScript = file("${rootProject.projectDir}/config/groovy/compiler-config.groovy")
+    groovyOptions.optimizationOptions.put('parameters', true)
+}
+
+compileJava {
+    // Enable parameter names in the compiled bytecode
+    options.compilerArgs << '-parameters'
+}
+
 dependencies {
     // Groovy
     implementation 'org.apache.groovy:groovy:4.0.25'
@@ -26,6 +37,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Added explicit Spring Security config dependency
+    implementation 'org.springframework.security:spring-security-config'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
@@ -49,9 +64,17 @@ dependencies {
     testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'
     testImplementation 'org.spockframework:spock-spring:2.4-M4-groovy-4.0'
 
+    // Test containers for MongoDB testing
     testImplementation 'org.testcontainers:testcontainers:1.19.5'
     testImplementation 'org.testcontainers:mongodb:1.19.5'
     testImplementation 'org.testcontainers:spock:1.19.5'
+
+    // Added explicit JAX-B dependencies for Jakarta EE compatibility
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+    runtimeOnly 'org.glassfish.jaxb:jaxb-runtime:4.0.2'
+
+    // Added JSON path for testing
+    testImplementation 'com.jayway.jsonpath:json-path:2.9.0'
 
     // Ensure JUnit platform dependencies have consistent versions
     testImplementation(platform('org.junit:junit-bom:5.10.2'))
@@ -63,7 +86,7 @@ tasks.named('test') {
 }
 
 // Use a more reliable way to start/stop MongoDB for tests
-task startTestMongoDB(type: Exec) {
+tasks.register('startTestMongoDB', Exec) {
     commandLine 'docker', 'compose', '-f', 'docker/docker-compose-test.yml', 'up', '-d', 'mongodb-test'
     doLast {
         println "Waiting for MongoDB to be ready..."
@@ -72,13 +95,20 @@ task startTestMongoDB(type: Exec) {
     }
 }
 
-task stopTestMongoDB(type: Exec) {
+tasks.register('stopTestMongoDB', Exec) {
     commandLine 'docker', 'compose', '-f', 'docker/docker-compose-test.yml', 'down'
 }
 
 test {
     dependsOn startTestMongoDB
     finalizedBy stopTestMongoDB
+
+    // Enable test logging
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
 
     // Skip failing tests for now
     // ignoreFailures = true

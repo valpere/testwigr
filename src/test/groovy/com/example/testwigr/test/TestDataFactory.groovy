@@ -9,29 +9,41 @@ import java.util.stream.Collectors
 
 class TestDataFactory {
 
+    // Static map to store generated IDs to ensure consistency
+    private static final Map<String, String> generatedIds = new HashMap<>()
+
+    // Get a consistent ID for a given key
+    static String getConsistentId(String key) {
+        if (!generatedIds.containsKey(key)) {
+            generatedIds.put(key, UUID.randomUUID().toString())
+        }
+        return generatedIds.get(key)
+    }
+
     // User Factory Methods
     static User createUser(String id = null, String username = 'testuser') {
+        // Ensure consistent ID generation if not explicitly provided
+        String finalId = id ?: getConsistentId("user-" + username)
+
         def user = new User(
-            username: username,
-            email: "${username}@example.com",
-            password: 'password123',
-            displayName: username.capitalize(),
-            createdAt: LocalDateTime.now(),
-            updatedAt: LocalDateTime.now(),
-            following: [] as Set,
-            followers: [] as Set,
-            active: true,
-            bio: "Bio for ${username}"
+                id: finalId,
+                username: username,
+                email: "${username}@example.com",
+                password: 'password123',
+                displayName: username.capitalize(),
+                createdAt: LocalDateTime.now(),
+                updatedAt: LocalDateTime.now(),
+                following: [] as Set,
+                followers: [] as Set,
+                active: true,
+                bio: "Bio for ${username}"
         )
-        if (id) {
-            user.id = id
-        }
         return user
     }
 
     // Create a user with followers and following
     static User createUserWithConnections(String id = null, String username = 'networkuser',
-                                         List<String> followerIds = [], List<String> followingIds = []) {
+                                          List<String> followerIds = [], List<String> followingIds = []) {
         def user = createUser(id, username)
         user.followers.addAll(followerIds)
         user.following.addAll(followingIds)
@@ -60,31 +72,34 @@ class TestDataFactory {
         if (user.active == null) user.active = true
         if (user.following == null) user.following = [] as Set
         if (user.followers == null) user.followers = [] as Set
+        // Set ID if not provided
+        if (!user.id) user.id = getConsistentId("user-custom-" + user.username)
 
         return user
     }
 
     // Post Factory Methods
     static Post createPost(String id = null, String content = 'Test post', String userId = '123', String username = 'testuser') {
+        // Ensure consistent ID generation if not explicitly provided
+        String finalId = id ?: getConsistentId("post-" + content + "-" + userId)
+
         def post = new Post(
-            content: content,
-            userId: userId,
-            username: username,
-            likes: [] as Set,
-            comments: [],
-            createdAt: LocalDateTime.now(),
-            updatedAt: LocalDateTime.now()
+                id: finalId,
+                content: content,
+                userId: userId,
+                username: username,
+                likes: [] as Set,
+                comments: [],
+                createdAt: LocalDateTime.now(),
+                updatedAt: LocalDateTime.now()
         )
-        if (id) {
-            post.id = id
-        }
         return post
     }
 
     // Create a post with likes
     static Post createPostWithLikes(String id = null, String content = 'Popular post',
-                                  String userId = '123', String username = 'testuser',
-                                  Set<String> likeUserIds = []) {
+                                    String userId = '123', String username = 'testuser',
+                                    Set<String> likeUserIds = []) {
         def post = createPost(id, content, userId, username)
         post.likes.addAll(likeUserIds)
         return post
@@ -92,8 +107,8 @@ class TestDataFactory {
 
     // Create a post with comments
     static Post createPostWithComments(String id = null, String content = 'Commented post',
-                                     String userId = '123', String username = 'testuser',
-                                     List<Comment> commentsToAdd = []) {
+                                       String userId = '123', String username = 'testuser',
+                                       List<Comment> commentsToAdd = []) {
         def post = createPost(id, content, userId, username)
         post.comments.addAll(commentsToAdd)
         return post
@@ -101,8 +116,8 @@ class TestDataFactory {
 
     // Create a post with specific date
     static Post createPostWithDate(String id = null, String content = 'Dated post',
-                                  String userId = '123', String username = 'testuser',
-                                  LocalDateTime createdAt) {
+                                   String userId = '123', String username = 'testuser',
+                                   LocalDateTime createdAt) {
         def post = createPost(id, content, userId, username)
         post.createdAt = createdAt
         post.updatedAt = createdAt
@@ -123,13 +138,26 @@ class TestDataFactory {
         if (!post.updatedAt) post.updatedAt = LocalDateTime.now()
         if (post.likes == null) post.likes = [] as Set
         if (post.comments == null) post.comments = []
+        // Set ID if not provided
+        if (!post.id) post.id = getConsistentId("post-custom-" + post.content.substring(0, Math.min(10, post.content.length())))
 
         return post
     }
 
     // Comment Factory Methods
     static Comment createComment(String content = 'Test comment', String userId = '123', String username = 'testuser') {
-        return new Comment(content, userId, username)
+        String commentId = getConsistentId("comment-" + content + "-" + userId)
+        def comment = new Comment(content, userId, username)
+        // Use reflection to set the ID since the Comment constructor doesn't accept an ID
+        try {
+            def field = Comment.class.getDeclaredField("id")
+            field.setAccessible(true)
+            field.set(comment, commentId)
+        } catch (Exception e) {
+            // Fallback to allow tests to work even if we can't set the ID
+            System.err.println("Warning: Could not set consistent ID for comment: " + e.message)
+        }
+        return comment
     }
 
     // Create multiple comments
@@ -144,31 +172,37 @@ class TestDataFactory {
 
     // Create comment with specific date
     static Comment createCommentWithDate(String content = 'Dated comment',
-                                        String userId = '123',
-                                        String username = 'testuser',
-                                        LocalDateTime createdAt) {
-        def comment = new Comment(content, userId, username)
+                                         String userId = '123',
+                                         String username = 'testuser',
+                                         LocalDateTime createdAt) {
+        def comment = createComment(content, userId, username)
         comment.createdAt = createdAt
         return comment
     }
 
+    // Method to reset all stored IDs - useful for tests that need a clean state
+    static void resetIds() {
+        generatedIds.clear()
+    }
+
+    // Remaining methods... (keeping the existing social scenario methods)
     // Create a fully populated social scenario (users, posts, comments, likes)
     static Map<String, Object> createSocialScenario(int userCount = 3, int postsPerUser = 2,
-                                                 int commentsPerPost = 2, int likesPerPost = 2) {
+                                                    int commentsPerPost = 2, int likesPerPost = 2) {
         def users = []
         def posts = []
         def result = [users: users, posts: posts]
 
         // Create users
         userCount.times { i ->
-            def user = createUser(UUID.randomUUID().toString(), "user${i}")
+            def user = createUser(null, "user${i}")
             users << user
         }
 
         // Create posts, comments and likes
         users.each { user ->
             postsPerUser.times { i ->
-                def post = createPost(UUID.randomUUID().toString(), "Post ${i} from ${user.username}", user.id, user.username)
+                def post = createPost(null, "Post ${i} from ${user.username}", user.id, user.username)
 
                 // Add comments from random users
                 commentsPerPost.times { c ->
@@ -200,15 +234,15 @@ class TestDataFactory {
                 int daysAgo = random.nextInt(daysSpan)
                 int hoursAgo = random.nextInt(24)
                 LocalDateTime postDate = LocalDateTime.now()
-                    .minusDays(daysAgo)
-                    .minusHours(hoursAgo)
+                        .minusDays(daysAgo)
+                        .minusHours(hoursAgo)
 
                 def post = createPostWithDate(
-                    UUID.randomUUID().toString(),
-                    "Timeline post ${i} from ${user.username}",
-                    user.id,
-                    user.username,
-                    postDate
+                        null,
+                        "Timeline post ${i} from ${user.username}",
+                        user.id,
+                        user.username,
+                        postDate
                 )
 
                 // Maybe add some comments and likes
@@ -220,10 +254,10 @@ class TestDataFactory {
                         LocalDateTime commentDate = postDate.plusHours(commentHoursAgo % (24 * daysAgo))
 
                         post.comments << createCommentWithDate(
-                            "Timeline comment on ${user.username}'s post",
-                            commenter.id,
-                            commenter.username,
-                            commentDate
+                                "Timeline comment on ${user.username}'s post",
+                                commenter.id,
+                                commenter.username,
+                                commentDate
                         )
                     }
                 }
@@ -253,7 +287,7 @@ class TestDataFactory {
 
         // Create users
         userCount.times { i ->
-            def user = createUser(UUID.randomUUID().toString(), "netuser${i}")
+            def user = createUser(null, "netuser${i}")
             users << user
         }
 
@@ -279,4 +313,5 @@ class TestDataFactory {
 
         return result
     }
+
 }

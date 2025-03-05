@@ -60,3 +60,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+.env
+!.env.template
+

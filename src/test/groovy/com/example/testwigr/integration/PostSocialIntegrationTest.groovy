@@ -20,6 +20,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
 import spock.lang.Specification
 
+/**
+ * Integration test focusing on social interactions with posts.
+ * This test verifies that users can create posts and interact with them
+ * through likes and comments. It confirms the core social features work
+ * correctly in an integrated environment.
+ */
 @SpringBootTest
 @ActiveProfiles('test')
 class PostSocialIntegrationTest extends Specification {
@@ -42,11 +48,18 @@ class PostSocialIntegrationTest extends Specification {
     MockMvc mockMvc
     String authToken
 
+    /**
+     * Set up the test environment before each test:
+     * 1. Configure MockMvc with Spring Security
+     * 2. Clean the database
+     * 3. Create a test user
+     * 4. Authenticate the user to get a JWT token
+     */
     def setup() {
         mockMvc = MockMvcBuilders
-            .webAppContextSetup(context)
-            .apply(springSecurity())
-            .build()
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build()
 
         // Clean up repositories
         postRepository.deleteAll()
@@ -59,14 +72,14 @@ class PostSocialIntegrationTest extends Specification {
 
         // Login and get JWT token
         def loginRequest = [
-            username: 'socialuser',
-            password: 'testpassword'
+                username: 'socialuser',
+                password: 'testpassword'
         ]
 
         def loginResult = mockMvc.perform(
-            post('/api/auth/login')
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest))
+                post('/api/auth/login')
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest))
         ).andReturn()
 
         def responseContent = loginResult.response.contentAsString
@@ -81,26 +94,37 @@ class PostSocialIntegrationTest extends Specification {
         }
     }
 
+    /**
+     * Tests the complete post social interaction flow:
+     * 1. Create a new post
+     * 2. Like the post
+     * 3. Verify the post shows as liked
+     * 4. Add a comment to the post
+     * 5. Verify the comment is visible
+     *
+     * This test confirms that the core social functionalities
+     * work correctly in an integrated environment.
+     */
     def "should create and interact with a post"() {
         given: 'a post creation request'
         def postRequest = [content: 'Integration test post']
 
         when: 'creating a post'
         def createResult = mockMvc.perform(
-            post('/api/posts')
-                .header('Authorization', "Bearer ${authToken}")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(postRequest))
+                post('/api/posts')
+                        .header('Authorization', "Bearer ${authToken}")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postRequest))
         )
 
         then: 'post is created successfully'
         createResult.andExpect(status().isOk())
-                  .andExpect(jsonPath('$.content').value('Integration test post'))
+                .andExpect(jsonPath('$.content').value('Integration test post'))
 
         and: 'the post ID can be extracted'
         def postJson = objectMapper.readValue(
-            createResult.andReturn().response.contentAsString,
-            Map
+                createResult.andReturn().response.contentAsString,
+                Map
         )
         def postId = postJson.id
 
@@ -109,8 +133,8 @@ class PostSocialIntegrationTest extends Specification {
         println "User attempting to like: ${user.id}, ${user.username}"
 
         def likeResult = mockMvc.perform(
-            post("/api/posts/${postId}/like")
-                .header('Authorization', "Bearer ${authToken}")
+                post("/api/posts/${postId}/like")
+                        .header('Authorization', "Bearer ${authToken}")
         )
 
         then: 'like operation succeeds'
@@ -118,8 +142,8 @@ class PostSocialIntegrationTest extends Specification {
 
         when: 'retrieving the post'
         def getResult = mockMvc.perform(
-            get("/api/posts/${postId}")
-                .header('Authorization', "Bearer ${authToken}")
+                get("/api/posts/${postId}")
+                        .header('Authorization', "Bearer ${authToken}")
         )
 
         then: 'post shows as liked'
@@ -130,11 +154,11 @@ class PostSocialIntegrationTest extends Specification {
         when: 'adding a comment'
         def commentRequest = [content: 'Integration test comment']
         def commentResult = mockMvc.perform(
-            // post("/api/comments/posts/${postId}")
-            post("/api/posts/${postId}/comments")
-                .header('Authorization', "Bearer ${authToken}")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(commentRequest))
+                // Using the appropriate endpoint for adding comments
+                post("/api/posts/${postId}/comments")
+                        .header('Authorization', "Bearer ${authToken}")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentRequest))
         )
 
         then: 'comment is added successfully'
@@ -142,13 +166,13 @@ class PostSocialIntegrationTest extends Specification {
 
         when: 'retrieving comments'
         def getCommentsResult = mockMvc.perform(
-            get("/api/posts/${postId}/comments")
-                .header('Authorization', "Bearer ${authToken}")
+                get("/api/posts/${postId}/comments")
+                        .header('Authorization', "Bearer ${authToken}")
         )
 
         then: 'comment is visible'
         getCommentsResult.andExpect(status().isOk())
-                       .andExpect(jsonPath('$[0].content').value('Integration test comment'))
+                .andExpect(jsonPath('$[0].content').value('Integration test comment'))
     }
 
 }

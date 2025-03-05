@@ -16,6 +16,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import spock.lang.Specification
 
+/**
+ * Integration test for PostController that tests the core post management functionality.
+ * These tests verify post creation, retrieval, and social interactions like likes.
+ * Uses a real test database and Spring's @WithMockUser for authentication.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -33,6 +38,11 @@ class PostControllerIntegrationSpec extends Specification {
     @Autowired
     PostRepository postRepository
 
+    /**
+     * Set up test data before each test:
+     * 1. Clean the database to ensure test isolation
+     * 2. Create a test user for post operations
+     */
     def setup() {
         // Clear the database before each test
         postRepository.deleteAll()
@@ -43,78 +53,98 @@ class PostControllerIntegrationSpec extends Specification {
         userRepository.save(user)
     }
 
+    /**
+     * Tests the full post lifecycle:
+     * 1. Create a new post
+     * 2. Retrieve the created post
+     * 3. Verify post content and author information
+     *
+     * Uses @WithMockUser to authenticate as 'integrationuser'
+     */
     @WithMockUser(username = "integrationuser")
     def "should create and retrieve a post"() {
-        given:
+        given: "authenticated user and post content"
         def user = userRepository.findByUsername("integrationuser").get()
         def createPostRequest = [content: "Integration test post"]
 
-        when: "Create a new post"
+        when: "creating a new post"
         def createResult = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/posts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createPostRequest))
+                MockMvcRequestBuilders.post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createPostRequest))
         )
 
-        then: "Post is created successfully"
+        then: "post is created successfully"
         createResult.andExpect(MockMvcResultMatchers.status().isOk())
 
+        // Extract the post ID from the response for further operations
         def postId = objectMapper.readValue(
-            createResult.andReturn().response.contentAsString,
-            Map
+                createResult.andReturn().response.contentAsString,
+                Map
         ).id
 
-        when: "Retrieve the created post"
+        when: "retrieving the created post"
         def getResult = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/posts/${postId}")
+                MockMvcRequestBuilders.get("/api/posts/${postId}")
         )
 
-        then: "Post details are returned correctly"
+        then: "post details are returned correctly"
         getResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.content').value("Integration test post"))
-            .andExpect(MockMvcResultMatchers.jsonPath('$.userId').value(user.id))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.content').value("Integration test post"))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.userId').value(user.id))
     }
 
+    /**
+     * Tests post like functionality:
+     * 1. Create a test post
+     * 2. Like the post
+     * 3. Verify post shows as liked
+     * 4. Unlike the post
+     * 5. Verify post no longer shows as liked
+     *
+     * Uses @WithMockUser to authenticate as 'integrationuser'
+     */
     @WithMockUser(username = "integrationuser")
     def "should like and unlike a post"() {
-        given:
+        given: "user and post in the database"
         def user = userRepository.findByUsername("integrationuser").get()
         def post = TestDataFactory.createPost(null, "Post to like", user.id, user.username)
         postRepository.save(post)
 
-        when: "User likes the post"
+        when: "user likes the post"
         def likeResult = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/posts/${post.id}/like")
+                MockMvcRequestBuilders.post("/api/posts/${post.id}/like")
         )
 
-        then: "Like operation succeeds"
+        then: "like operation succeeds"
         likeResult.andExpect(MockMvcResultMatchers.status().isOk())
 
-        when: "Retrieve the post"
+        when: "retrieving the post"
         def getResult = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/posts/${post.id}")
+                MockMvcRequestBuilders.get("/api/posts/${post.id}")
         )
 
-        then: "Post shows as liked"
+        then: "post shows as liked by the user"
         getResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.likes').isArray())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.likes[0]').value(user.id))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.likes').isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath('$.likes[0]').value(user.id))
 
-        when: "User unlikes the post"
+        when: "user unlikes the post"
         def unlikeResult = mockMvc.perform(
-            MockMvcRequestBuilders.delete("/api/posts/${post.id}/like")
+                MockMvcRequestBuilders.delete("/api/posts/${post.id}/like")
         )
 
-        then: "Unlike operation succeeds"
+        then: "unlike operation succeeds"
         unlikeResult.andExpect(MockMvcResultMatchers.status().isOk())
 
-        when: "Retrieve the post again"
+        when: "retrieving the post again"
         def getFinalResult = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/posts/${post.id}")
+                MockMvcRequestBuilders.get("/api/posts/${post.id}")
         )
 
-        then: "Post no longer shows as liked"
+        then: "post no longer shows as liked"
         getFinalResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.likes').isEmpty())
+                .andExpect(MockMvcResultMatchers.jsonPath('$.likes').isEmpty())
     }
+
 }

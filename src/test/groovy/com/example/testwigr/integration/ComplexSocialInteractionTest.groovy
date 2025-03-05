@@ -19,6 +19,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import spock.lang.Specification
 
+/**
+ * Integration test that simulates complex social network interactions.
+ * This test creates a network of users that follow each other, create posts,
+ * and interact through likes and comments to verify the social aspects of the platform.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles('test')
@@ -46,6 +51,11 @@ class ComplexSocialInteractionTest extends Specification {
     Map<String, String> userTokens = [:]
     List<User> testUsers = []
 
+    /**
+     * Set up test environment before each test:
+     * 1. Clean the database to ensure test isolation
+     * 2. Create a network of test users
+     */
     def setup() {
         // Start with a clean database
         TestDatabaseUtils.cleanDatabase(userRepository, postRepository)
@@ -54,10 +64,22 @@ class ComplexSocialInteractionTest extends Specification {
         createTestUserNetwork(5)
     }
 
+    /**
+     * Clean up after the test
+     */
     def cleanup() {
         TestDatabaseUtils.cleanDatabase(userRepository, postRepository)
     }
 
+    /**
+     * Helper method to create a network of test users.
+     * For each user:
+     * 1. Creates and saves a user in the database
+     * 2. Generates a JWT token for authentication
+     * 3. Stores the user and token for later use
+     *
+     * @param userCount Number of users to create
+     */
     private void createTestUserNetwork(int userCount) {
         // Create users and get tokens directly with TestSecurityUtils
         userCount.times { i ->
@@ -74,25 +96,35 @@ class ComplexSocialInteractionTest extends Specification {
         }
     }
 
+    /**
+     * Tests a complex social network scenario with multiple users:
+     * 1. Users follow each other in a complex pattern
+     * 2. Each user creates multiple posts
+     * 3. Users like and comment on various posts
+     * 4. A user checks their feed which should contain relevant posts
+     *
+     * This comprehensive test verifies that all social interactions work together.
+     */
     def "should test complex social network interactions"() {
         // 1. Each user follows some other users
         when: 'Users follow each other in a complex pattern'
         def successfulFollows = 0
 
+        // Define follow relationships:
         // User 0 follows users 1, 2
         // User 1 follows users 0, 2, 3
         // User 2 follows users 0, 4
         // User 3 follows users 1, 4
         // User 4 follows users 0, 1, 2, 3
-
         def followPattern = [
-            0: [1, 2],
-            1: [0, 2, 3],
-            2: [0, 4],
-            3: [1, 4],
-            4: [0, 1, 2, 3]
+                0: [1, 2],
+                1: [0, 2, 3],
+                2: [0, 4],
+                3: [1, 4],
+                4: [0, 1, 2, 3]
         ]
 
+        // Execute follow operations according to the pattern
         followPattern.each { followerIdx, followeeIdxs ->
             String followerUsername = 'socialuser' + followerIdx
             def followerToken = userTokens[followerUsername]
@@ -104,8 +136,8 @@ class ComplexSocialInteractionTest extends Specification {
 
                         try {
                             def followResult = mockMvc.perform(
-                                MockMvcRequestBuilders.post("/api/follow/${followeeId}")
-                                    .header('Authorization', 'Bearer ' + followerToken)
+                                    MockMvcRequestBuilders.post("/api/follow/${followeeId}")
+                                            .header('Authorization', 'Bearer ' + followerToken)
                             ).andReturn()
 
                             if (followResult.response.status == 200) {
@@ -131,6 +163,7 @@ class ComplexSocialInteractionTest extends Specification {
             def token = userTokens[username]
 
             if (token) {
+                // Each user creates 3 posts
                 (1..3).each { postIdx ->
                     // Convert GString to Java String
                     String postContent = 'Post ' + postIdx + ' from ' + username
@@ -138,22 +171,22 @@ class ComplexSocialInteractionTest extends Specification {
 
                     try {
                         def createPostResult = mockMvc.perform(
-                            MockMvcRequestBuilders.post('/api/posts')
-                                .header('Authorization', 'Bearer ' + token)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(createPostRequest))
+                                MockMvcRequestBuilders.post('/api/posts')
+                                        .header('Authorization', 'Bearer ' + token)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(createPostRequest))
                         ).andReturn()
 
                         if (createPostResult.response.status == 200) {
                             def postResponse = objectMapper.readValue(
-                                createPostResult.response.contentAsString,
-                                Map
+                                    createPostResult.response.contentAsString,
+                                    Map
                             )
 
                             posts << [
-                                id: postResponse.id,
-                                content: postContent,
-                                authorIdx: idx
+                                    id: postResponse.id,
+                                    content: postContent,
+                                    authorIdx: idx
                             ]
                         } else {
                             println "Failed to create post. Status: ${createPostResult.response.status}"
@@ -175,7 +208,6 @@ class ComplexSocialInteractionTest extends Specification {
 
         // Only proceed if we have posts to interact with
         if (!posts.isEmpty()) {
-            // Create a specific interaction pattern
             // Each user likes and comments on available posts
             testUsers.eachWithIndex { user, userIdx ->
                 String username = user.username
@@ -189,8 +221,8 @@ class ComplexSocialInteractionTest extends Specification {
                     postsToLike.each { post ->
                         try {
                             def likeResult = mockMvc.perform(
-                                MockMvcRequestBuilders.post("/api/likes/posts/${post.id}")
-                                    .header('Authorization', 'Bearer ' + token)
+                                    MockMvcRequestBuilders.post("/api/likes/posts/${post.id}")
+                                            .header('Authorization', 'Bearer ' + token)
                             ).andReturn()
 
                             if (likeResult.response.status == 200) {
@@ -212,10 +244,10 @@ class ComplexSocialInteractionTest extends Specification {
 
                         try {
                             def commentResult = mockMvc.perform(
-                                MockMvcRequestBuilders.post("/api/comments/posts/${post.id}")
-                                    .header('Authorization', 'Bearer ' + token)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(commentRequest))
+                                    MockMvcRequestBuilders.post("/api/comments/posts/${post.id}")
+                                            .header('Authorization', 'Bearer ' + token)
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .content(objectMapper.writeValueAsString(commentRequest))
                             ).andReturn()
 
                             if (commentResult.response.status == 200) {
@@ -238,8 +270,8 @@ class ComplexSocialInteractionTest extends Specification {
         if (!testUsers.isEmpty() && userTokens.containsKey(testUsers[0].username)) {
             try {
                 feedResult = mockMvc.perform(
-                    MockMvcRequestBuilders.get('/api/feed')
-                        .header('Authorization', 'Bearer ' + userTokens[testUsers[0].username])
+                        MockMvcRequestBuilders.get('/api/feed')
+                                .header('Authorization', 'Bearer ' + userTokens[testUsers[0].username])
                 ).andReturn()
 
                 println "Feed status: ${feedResult.response.status}"

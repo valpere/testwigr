@@ -23,6 +23,13 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import java.nio.charset.StandardCharsets
 
+/**
+ * Integration test that verifies the complete authentication flow.
+ * These tests examine authentication edge cases including:
+ * - Token expiration
+ * - Inactive user authentication
+ * - Registration, login, token usage, and logout
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles('test')
@@ -43,6 +50,11 @@ class AuthenticationFlowIntegrationTest extends Specification {
     @Value('${app.jwt.secret:testSecretKeyForTestingPurposesOnlyDoNotUseInProduction}')
     String jwtSecret
 
+    /**
+     * Set up test data before each test:
+     * 1. Clean the database
+     * 2. Create test users with different states (active, inactive)
+     */
     def setup() {
         userRepository.deleteAll()
 
@@ -58,112 +70,139 @@ class AuthenticationFlowIntegrationTest extends Specification {
         userRepository.save(inactiveUser)
     }
 
+    /**
+     * Tests authentication with an expired token:
+     * 1. Generates an expired JWT token
+     * 2. Attempts to access a protected resource
+     * 3. Verifies access is denied with 403 status
+     */
     def "should block access with expired token"() {
         given: 'An expired JWT token'
         def expiredToken = generateExpiredToken('activeuser', jwtSecret)
 
         when: 'Accessing protected resource with expired token'
         def result = mockMvc.perform(
-            MockMvcRequestBuilders.get('/api/posts')
-                .header('Authorization', "Bearer ${expiredToken}")
+                MockMvcRequestBuilders.get('/api/posts')
+                        .header('Authorization', "Bearer ${expiredToken}")
         )
 
         then: 'Access is denied with 403 status'
         result.andExpect(MockMvcResultMatchers.status().isForbidden())
     }
 
+    /**
+     * Tests authentication for inactive users:
+     * 1. Attempts to log in with credentials of an inactive user
+     * 2. Verifies login is rejected with 401 status
+     */
     def "should reject login for inactive user"() {
         given: 'Login request for inactive user'
         def loginRequest = [
-            username: 'inactiveuser',
-            password: 'password123'
+                username: 'inactiveuser',
+                password: 'password123'
         ]
 
         when: 'Attempting to login'
         def result = mockMvc.perform(
-            MockMvcRequestBuilders.post('/api/auth/login')
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest))
+                MockMvcRequestBuilders.post('/api/auth/login')
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest))
         )
 
-        then: 'Login is rejected'
+        then: 'Login is rejected with unauthorized status'
         result.andExpect(MockMvcResultMatchers.status().isUnauthorized())
     }
 
+    /**
+     * Tests the complete authentication flow:
+     * 1. Register a new user
+     * 2. Log in to get a JWT token
+     * 3. Access protected resources with the token
+     * 4. Log out
+     *
+     * This test verifies the full authentication lifecycle
+     */
     def "should complete full authentication flow"() {
-        given: 'Registration data'
+        given: 'Registration data for a new user'
         def registerRequest = [
-            username: 'newflowuser',
-            email: 'newflowuser@example.com',
-            password: 'flowpassword',
-            displayName: 'Flow User'
+                username: 'newflowuser',
+                email: 'newflowuser@example.com',
+                password: 'flowpassword',
+                displayName: 'Flow User'
         ]
 
         when: 'Registering a new user'
         def registerResult = mockMvc.perform(
-            MockMvcRequestBuilders.post('/api/auth/register')
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest))
+                MockMvcRequestBuilders.post('/api/auth/register')
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest))
         )
 
         then: 'Registration succeeds'
         registerResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.success').value(true))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.success').value(true))
 
         when: 'Logging in with new user'
         def loginRequest = [
-            username: 'newflowuser',
-            password: 'flowpassword'
+                username: 'newflowuser',
+                password: 'flowpassword'
         ]
 
         def loginResult = mockMvc.perform(
-            MockMvcRequestBuilders.post('/api/auth/login')
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest))
+                MockMvcRequestBuilders.post('/api/auth/login')
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest))
         )
 
-        then: 'Login succeeds and returns token'
+        then: 'Login succeeds and returns a token'
         loginResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.token').exists())
+                .andExpect(MockMvcResultMatchers.jsonPath('$.token').exists())
 
-        and: 'Can extract token'
+        and: 'The token can be extracted for further use'
         def responseJson = objectMapper.readValue(
-            loginResult.andReturn().response.contentAsString,
-            Map
+                loginResult.andReturn().response.contentAsString,
+                Map
         )
         def token = responseJson.token
 
         when: 'Accessing protected resource with token'
         def protectedResult = mockMvc.perform(
-            MockMvcRequestBuilders.get('/api/users/me')
-                .header('Authorization', "Bearer ${token}")
+                MockMvcRequestBuilders.get('/api/users/me')
+                        .header('Authorization', "Bearer ${token}")
         )
 
-        then: 'Access is granted'
+        then: 'Access is granted to the protected resource'
         protectedResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.username').value('newflowuser'))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.username').value('newflowuser'))
 
         when: 'Logging out'
         def logoutResult = mockMvc.perform(
-            MockMvcRequestBuilders.post('/api/auth/logout')
-                .header('Authorization', "Bearer ${token}")
+                MockMvcRequestBuilders.post('/api/auth/logout')
+                        .header('Authorization', "Bearer ${token}")
         )
 
         then: 'Logout succeeds'
         logoutResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.success').value(true))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.success').value(true))
     }
 
-    // Helper method to generate expired JWT token
+    /**
+     * Helper method to generate an expired JWT token for testing.
+     * Creates a token that was valid in the past but has now expired.
+     *
+     * @param username The username to include in the token
+     * @param secret The secret key used for signing the token
+     * @return An expired JWT token string
+     */
     private String generateExpiredToken(String username, String secret) {
         Instant past = Instant.now().minus(1, ChronoUnit.DAYS)
 
         return Jwts.builder()
-            .subject(username)
-            .issuedAt(Date.from(past.minus(2, ChronoUnit.DAYS)))
-            .expiration(Date.from(past))
-            .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
-            .compact()
+                .subject(username)
+                .issuedAt(Date.from(past.minus(2, ChronoUnit.DAYS)))
+                .expiration(Date.from(past))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                .compact()
     }
 
 }

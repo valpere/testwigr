@@ -14,7 +14,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import spock.lang.Specification
 
 /**
- * Base class for controller integration tests that provides common functionality
+ * Base class for controller integration tests that provides common testing functionality.
+ * This class offers utilities for authentication, JSON conversion, and request building
+ * to simplify controller tests and promote consistent testing patterns.
+ *
+ * By extending this class, controller tests can focus on the specific functionality
+ * being tested rather than on test infrastructure.
  */
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -31,7 +36,12 @@ abstract class ControllerTestBase extends Specification {
     protected String jwtSecret
 
     /**
-     * Helper method to add authentication token to a request
+     * Adds authentication to a request by generating a JWT token and
+     * adding it to the Authorization header.
+     *
+     * @param request The request builder to add authentication to
+     * @param username The username to generate a token for (defaults to "testuser")
+     * @return The request builder with added Authorization header
      */
     protected MockHttpServletRequestBuilder withAuth(MockHttpServletRequestBuilder request, String username = "testuser") {
         String token = TestSecurityUtils.generateTestToken(username, jwtSecret)
@@ -39,14 +49,23 @@ abstract class ControllerTestBase extends Specification {
     }
 
     /**
-     * Helper method to convert an object to JSON string
+     * Converts an object to JSON string using ObjectMapper.
+     * Useful for preparing request bodies.
+     *
+     * @param obj The object to convert to JSON
+     * @return JSON string representation of the object
      */
     protected String toJson(Object obj) {
         return objectMapper.writeValueAsString(obj)
     }
 
     /**
-     * Helper method to create a JSON request
+     * Configures a request builder for JSON content type and optionally
+     * adds a request body.
+     *
+     * @param request The request builder to configure
+     * @param body Optional body object to add to the request (will be converted to JSON)
+     * @return The configured request builder
      */
     protected MockHttpServletRequestBuilder jsonRequest(MockHttpServletRequestBuilder request, Object body = null) {
         def result = request.contentType(MediaType.APPLICATION_JSON)
@@ -57,4 +76,3 @@ abstract class ControllerTestBase extends Specification {
     }
 
 }
-

@@ -7,21 +7,35 @@ import java.time.LocalDateTime
 import java.util.UUID
 import java.util.stream.Collectors
 
+/**
+ * Factory class for creating test data entities.
+ * This class provides methods to create users, posts, and comments with
+ * predictable data for testing. It helps maintain consistency across tests
+ * and simplifies test setup.
+ */
 class TestDataFactory {
 
-    // User Factory Methods
+    // ======== User Factory Methods ========
+
+    /**
+     * Creates a basic test user with default values.
+     *
+     * @param id Optional ID (generated if null)
+     * @param username Username (defaults to 'testuser')
+     * @return A User entity with test data
+     */
     static User createUser(String id = null, String username = 'testuser') {
         def user = new User(
-            username: username,
-            email: "${username}@example.com",
-            password: 'password123',
-            displayName: username.capitalize(),
-            createdAt: LocalDateTime.now(),
-            updatedAt: LocalDateTime.now(),
-            following: [] as Set,
-            followers: [] as Set,
-            active: true,
-            bio: "Bio for ${username}"
+                username: username,
+                email: "${username}@example.com",
+                password: 'password123',
+                displayName: username.capitalize(),
+                createdAt: LocalDateTime.now(),
+                updatedAt: LocalDateTime.now(),
+                following: [] as Set,
+                followers: [] as Set,
+                active: true,
+                bio: "Bio for ${username}"
         )
         if (id) {
             user.id = id
@@ -29,23 +43,43 @@ class TestDataFactory {
         return user
     }
 
-    // Create a user with followers and following
+    /**
+     * Creates a user with followers and following relationships.
+     *
+     * @param id Optional ID (generated if null)
+     * @param username Username (defaults to 'networkuser')
+     * @param followerIds List of user IDs that follow this user
+     * @param followingIds List of user IDs that this user follows
+     * @return A User entity with social connections
+     */
     static User createUserWithConnections(String id = null, String username = 'networkuser',
-                                         List<String> followerIds = [], List<String> followingIds = []) {
+                                          List<String> followerIds = [], List<String> followingIds = []) {
         def user = createUser(id, username)
         user.followers.addAll(followerIds)
         user.following.addAll(followingIds)
         return user
     }
 
-    // Create an inactive user
+    /**
+     * Creates an inactive user for testing deactivated accounts.
+     *
+     * @param id Optional ID (generated if null)
+     * @param username Username (defaults to 'inactiveuser')
+     * @return A User entity marked as inactive
+     */
     static User createInactiveUser(String id = null, String username = 'inactiveuser') {
         def user = createUser(id, username)
         user.active = false
         return user
     }
 
-    // Create user with specific attributes
+    /**
+     * Creates a user with custom attributes.
+     * Allows flexible creation of users with specific properties.
+     *
+     * @param attributes Map of attribute name to value
+     * @return A User entity with custom attributes
+     */
     static User createCustomUser(Map<String, Object> attributes) {
         def user = new User()
         attributes.each { key, value ->
@@ -64,16 +98,26 @@ class TestDataFactory {
         return user
     }
 
-    // Post Factory Methods
+    // ======== Post Factory Methods ========
+
+    /**
+     * Creates a basic test post with default values.
+     *
+     * @param id Optional ID (generated if null)
+     * @param content Post content (defaults to 'Test post')
+     * @param userId ID of the post author (defaults to '123')
+     * @param username Username of the post author (defaults to 'testuser')
+     * @return A Post entity with test data
+     */
     static Post createPost(String id = null, String content = 'Test post', String userId = '123', String username = 'testuser') {
         def post = new Post(
-            content: content,
-            userId: userId,
-            username: username,
-            likes: [] as Set,
-            comments: [],
-            createdAt: LocalDateTime.now(),
-            updatedAt: LocalDateTime.now()
+                content: content,
+                userId: userId,
+                username: username,
+                likes: [] as Set,
+                comments: [],
+                createdAt: LocalDateTime.now(),
+                updatedAt: LocalDateTime.now()
         )
         if (id) {
             post.id = id
@@ -81,35 +125,69 @@ class TestDataFactory {
         return post
     }
 
-    // Create a post with likes
+    /**
+     * Creates a post with likes from specified users.
+     *
+     * @param id Optional ID (generated if null)
+     * @param content Post content (defaults to 'Popular post')
+     * @param userId ID of the post author
+     * @param username Username of the post author
+     * @param likeUserIds Set of user IDs that liked the post
+     * @return A Post entity with likes
+     */
     static Post createPostWithLikes(String id = null, String content = 'Popular post',
-                                  String userId = '123', String username = 'testuser',
-                                  Set<String> likeUserIds = []) {
+                                    String userId = '123', String username = 'testuser',
+                                    Set<String> likeUserIds = []) {
         def post = createPost(id, content, userId, username)
         post.likes.addAll(likeUserIds)
         return post
     }
 
-    // Create a post with comments
+    /**
+     * Creates a post with comments.
+     *
+     * @param id Optional ID (generated if null)
+     * @param content Post content (defaults to 'Commented post')
+     * @param userId ID of the post author
+     * @param username Username of the post author
+     * @param commentsToAdd List of comments to add to the post
+     * @return A Post entity with comments
+     */
     static Post createPostWithComments(String id = null, String content = 'Commented post',
-                                     String userId = '123', String username = 'testuser',
-                                     List<Comment> commentsToAdd = []) {
+                                       String userId = '123', String username = 'testuser',
+                                       List<Comment> commentsToAdd = []) {
         def post = createPost(id, content, userId, username)
         post.comments.addAll(commentsToAdd)
         return post
     }
 
-    // Create a post with specific date
+    /**
+     * Creates a post with a specific creation date.
+     * Useful for testing chronological sorting.
+     *
+     * @param id Optional ID (generated if null)
+     * @param content Post content (defaults to 'Dated post')
+     * @param userId ID of the post author
+     * @param username Username of the post author
+     * @param createdAt The creation timestamp for the post
+     * @return A Post entity with specified creation date
+     */
     static Post createPostWithDate(String id = null, String content = 'Dated post',
-                                  String userId = '123', String username = 'testuser',
-                                  LocalDateTime createdAt) {
+                                   String userId = '123', String username = 'testuser',
+                                   LocalDateTime createdAt) {
         def post = createPost(id, content, userId, username)
         post.createdAt = createdAt
         post.updatedAt = createdAt
         return post
     }
 
-    // Create post with specific attributes
+    /**
+     * Creates a post with custom attributes.
+     * Allows flexible creation of posts with specific properties.
+     *
+     * @param attributes Map of attribute name to value
+     * @return A Post entity with custom attributes
+     */
     static Post createCustomPost(Map<String, Object> attributes) {
         def post = new Post()
         attributes.each { key, value ->
@@ -127,12 +205,29 @@ class TestDataFactory {
         return post
     }
 
-    // Comment Factory Methods
+    // ======== Comment Factory Methods ========
+
+    /**
+     * Creates a basic test comment with default values.
+     *
+     * @param content Comment content (defaults to 'Test comment')
+     * @param userId ID of the comment author (defaults to '123')
+     * @param username Username of the comment author (defaults to 'testuser')
+     * @return A Comment entity with test data
+     */
     static Comment createComment(String content = 'Test comment', String userId = '123', String username = 'testuser') {
         return new Comment(content, userId, username)
     }
 
-    // Create multiple comments
+    /**
+     * Creates multiple comments with sequential numbering.
+     *
+     * @param count Number of comments to create
+     * @param baseContent Base content text to append number to
+     * @param userId ID of the comment author
+     * @param username Username of the comment author
+     * @return List of Comment entities
+     */
     static List<Comment> createComments(int count = 3, String baseContent = 'Comment',
                                         String userId = '123', String username = 'testuser') {
         def comments = []
@@ -142,19 +237,38 @@ class TestDataFactory {
         return comments
     }
 
-    // Create comment with specific date
+    /**
+     * Creates a comment with a specific creation date.
+     *
+     * @param content Comment content (defaults to 'Dated comment')
+     * @param userId ID of the comment author
+     * @param username Username of the comment author
+     * @param createdAt The creation timestamp for the comment
+     * @return A Comment entity with specified creation date
+     */
     static Comment createCommentWithDate(String content = 'Dated comment',
-                                        String userId = '123',
-                                        String username = 'testuser',
-                                        LocalDateTime createdAt) {
+                                         String userId = '123',
+                                         String username = 'testuser',
+                                         LocalDateTime createdAt) {
         def comment = new Comment(content, userId, username)
         comment.createdAt = createdAt
         return comment
     }
 
-    // Create a fully populated social scenario (users, posts, comments, likes)
+    // ======== Complex Scenario Factory Methods ========
+
+    /**
+     * Creates a fully populated social scenario with users, posts, comments, and likes.
+     * Useful for integration tests that need a realistic social network.
+     *
+     * @param userCount Number of users to create
+     * @param postsPerUser Number of posts per user
+     * @param commentsPerPost Number of comments per post
+     * @param likesPerPost Number of likes per post
+     * @return Map containing lists of users and posts
+     */
     static Map<String, Object> createSocialScenario(int userCount = 3, int postsPerUser = 2,
-                                                 int commentsPerPost = 2, int likesPerPost = 2) {
+                                                    int commentsPerPost = 2, int likesPerPost = 2) {
         def users = []
         def posts = []
         def result = [users: users, posts: posts]
@@ -189,7 +303,15 @@ class TestDataFactory {
         return result
     }
 
-    // Create a realistic timeline of posts with varied dates
+    /**
+     * Creates a realistic timeline of posts with varied dates.
+     * Posts are distributed across a specified time span with random dates.
+     *
+     * @param users List of users who will create posts
+     * @param postsPerUser Number of posts per user
+     * @param daysSpan Number of days to spread posts across
+     * @return List of Post entities sorted by creation date (newest first)
+     */
     static List<Post> createTimeline(List<User> users, int postsPerUser = 5, int daysSpan = 30) {
         def posts = []
         def random = new Random()
@@ -200,15 +322,15 @@ class TestDataFactory {
                 int daysAgo = random.nextInt(daysSpan)
                 int hoursAgo = random.nextInt(24)
                 LocalDateTime postDate = LocalDateTime.now()
-                    .minusDays(daysAgo)
-                    .minusHours(hoursAgo)
+                        .minusDays(daysAgo)
+                        .minusHours(hoursAgo)
 
                 def post = createPostWithDate(
-                    UUID.randomUUID().toString(),
-                    "Timeline post ${i} from ${user.username}",
-                    user.id,
-                    user.username,
-                    postDate
+                        UUID.randomUUID().toString(),
+                        "Timeline post ${i} from ${user.username}",
+                        user.id,
+                        user.username,
+                        postDate
                 )
 
                 // Maybe add some comments and likes
@@ -220,10 +342,10 @@ class TestDataFactory {
                         LocalDateTime commentDate = postDate.plusHours(commentHoursAgo % (24 * daysAgo))
 
                         post.comments << createCommentWithDate(
-                            "Timeline comment on ${user.username}'s post",
-                            commenter.id,
-                            commenter.username,
-                            commentDate
+                                "Timeline comment on ${user.username}'s post",
+                                commenter.id,
+                                commenter.username,
+                                commentDate
                         )
                     }
                 }
@@ -244,7 +366,13 @@ class TestDataFactory {
         return posts.sort { a, b -> b.createdAt <=> a.createdAt }
     }
 
-    // Create a complex social network with realistic connections
+    /**
+     * Creates a complex social network with realistic connections.
+     * Generates users with varied follow relationships and a timeline of posts.
+     *
+     * @param userCount Number of users to create
+     * @return Map containing lists of users and posts
+     */
     static Map<String, Object> createComplexSocialNetwork(int userCount = 10) {
         def users = []
         def posts = []
@@ -279,4 +407,5 @@ class TestDataFactory {
 
         return result
     }
+
 }

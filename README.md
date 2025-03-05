@@ -44,6 +44,7 @@ A robust Twitter-like API built with Groovy, Spring Boot, and MongoDB. This proj
   - Gradle
   - Docker
   - Docker Compose
+  - NGINX (for production)
 
 - **Testing**
   - Spock Framework
@@ -56,37 +57,49 @@ A robust Twitter-like API built with Groovy, Spring Boot, and MongoDB. This proj
 
 - JDK 21 or higher
 - Docker and Docker Compose
-- MongoDB (or use the Docker Compose configuration)
+- Git
 
 ### Local Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/testwigr.git
    cd testwigr
    ```
 
-2. **Start MongoDB using Docker**
+2. **Environment Configuration**
+
+   ```bash
+   cp .env.template .env
+   # Edit .env with appropriate values
+   ```
+
+3. **Start MongoDB using Docker**
+
    ```bash
    docker-compose -f docker/docker-compose.yml up -d mongodb
    ```
 
-3. **Build the application**
+4. **Build the application**
+
    ```bash
    ./gradlew build -x test
    ```
 
-4. **Run the application**
+5. **Run the application**
+
    ```bash
    ./gradlew bootRun
    ```
 
    Or use Docker to run the entire stack:
+
    ```bash
    docker-compose -f docker/docker-compose.yml up -d
    ```
 
-5. **Access the API**
+6. **Access the API**
    - The API will be available at `http://localhost:8080`
    - Swagger UI documentation is available at `http://localhost:8080/swagger-ui.html`
 
@@ -112,6 +125,10 @@ Basic test commands:
 # Stop test MongoDB
 ./scripts/stop-test-db.sh
 ```
+
+### Deployment
+
+For comprehensive deployment instructions, including production setup, please refer to [DEPLOY.md](DEPLOY.md).
 
 ## API Endpoints
 
@@ -161,7 +178,7 @@ The API provides the following main endpoints:
 
 ## Project Structure
 
-```
+```plaintext
 testwigr/
 ├── docker/                    # Docker configurations
 ├── scripts/                   # Utility scripts
@@ -190,10 +207,12 @@ testwigr/
 │       │       └── test/      # Test utilities
 │       └── resources/         # Test resources
 ├── build.gradle               # Gradle build configuration
+├── DEPLOY.md                  # Deployment documentation
 ├── LICENSE                    # Project license (Apache 2.0)
 ├── README.md                  # This file
 ├── settings.gradle            # Gradle settings
-└── TESTING.md                 # Testing documentation
+├── TESTING.md                 # Testing documentation
+└── .env.template              # Environment variable template
 ```
 
 ## Security
@@ -217,6 +236,16 @@ TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
 curl -X GET http://localhost:8080/api/users/me \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+## Monitoring
+
+The application exposes several monitoring endpoints through Spring Actuator:
+
+- `/actuator/health` - Application health information
+- `/actuator/metrics` - Application metrics
+- `/actuator/prometheus` - Prometheus-formatted metrics
+
+For production deployments, a complete monitoring stack with Prometheus and Grafana is available. See [DEPLOY.md](DEPLOY.md) for details.
 
 ## Contributing
 

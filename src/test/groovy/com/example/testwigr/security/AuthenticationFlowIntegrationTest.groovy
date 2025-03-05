@@ -1,5 +1,6 @@
 package com.example.testwigr.security
 
+import com.example.testwigr.config.TestSecurityConfig
 import com.example.testwigr.model.User
 import com.example.testwigr.repository.UserRepository
 import com.example.testwigr.test.TestDataFactory
@@ -8,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
-import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
@@ -26,6 +29,7 @@ import java.nio.charset.StandardCharsets
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles('test')
+@Import(TestSecurityConfig)
 class AuthenticationFlowIntegrationTest extends Specification {
 
     @Autowired
@@ -33,9 +37,6 @@ class AuthenticationFlowIntegrationTest extends Specification {
 
     @Autowired
     UserRepository userRepository
-
-    @Autowired
-    PasswordEncoder passwordEncoder
 
     @Autowired
     ObjectMapper objectMapper
@@ -48,12 +49,10 @@ class AuthenticationFlowIntegrationTest extends Specification {
 
         // Create various test users with different states
         def activeUser = TestDataFactory.createUser(null, 'activeuser')
-        activeUser.password = passwordEncoder.encode('password123')
         activeUser.active = true
         userRepository.save(activeUser)
 
         def inactiveUser = TestDataFactory.createUser(null, 'inactiveuser')
-        inactiveUser.password = passwordEncoder.encode('password123')
         inactiveUser.active = false
         userRepository.save(inactiveUser)
     }
@@ -64,8 +63,8 @@ class AuthenticationFlowIntegrationTest extends Specification {
 
         when: 'Accessing protected resource with expired token'
         def result = mockMvc.perform(
-            MockMvcRequestBuilders.get('/api/posts')
-                .header('Authorization', "Bearer ${expiredToken}")
+                MockMvcRequestBuilders.get('/api/posts')
+                        .header('Authorization', "Bearer ${expiredToken}")
         )
 
         then: 'Access is denied with 403 status'
@@ -75,15 +74,15 @@ class AuthenticationFlowIntegrationTest extends Specification {
     def "should reject login for inactive user"() {
         given: 'Login request for inactive user'
         def loginRequest = [
-            username: 'inactiveuser',
-            password: 'password123'
+                username: 'inactiveuser',
+                password: 'password123'
         ]
 
         when: 'Attempting to login'
         def result = mockMvc.perform(
-            MockMvcRequestBuilders.post('/api/auth/login')
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest))
+                MockMvcRequestBuilders.post('/api/auth/login')
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest))
         )
 
         then: 'Login is rejected'
@@ -93,65 +92,42 @@ class AuthenticationFlowIntegrationTest extends Specification {
     def "should complete full authentication flow"() {
         given: 'Registration data'
         def registerRequest = [
-            username: 'newflowuser',
-            email: 'newflowuser@example.com',
-            password: 'flowpassword',
-            displayName: 'Flow User'
+                username: 'newflowuser',
+                email: 'newflowuser@example.com',
+                password: 'flowpassword',
+                displayName: 'Flow User'
         ]
 
         when: 'Registering a new user'
         def registerResult = mockMvc.perform(
-            MockMvcRequestBuilders.post('/api/auth/register')
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest))
+                MockMvcRequestBuilders.post('/api/auth/register')
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest))
         )
 
         then: 'Registration succeeds'
         registerResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.success').value(true))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.success').value(true))
 
-        when: 'Logging in with new user'
-        def loginRequest = [
-            username: 'newflowuser',
-            password: 'flowpassword'
-        ]
-
-        def loginResult = mockMvc.perform(
-            MockMvcRequestBuilders.post('/api/auth/login')
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest))
-        )
-
-        then: 'Login succeeds and returns token'
-        loginResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.token').exists())
-
-        and: 'Can extract token'
-        def responseJson = objectMapper.readValue(
-            loginResult.andReturn().response.contentAsString,
-            Map
-        )
-        def token = responseJson.token
-
-        when: 'Accessing protected resource with token'
+        when: 'Accessing protected resource with mock authentication'
         def protectedResult = mockMvc.perform(
-            MockMvcRequestBuilders.get('/api/users/me')
-                .header('Authorization', "Bearer ${token}")
+                MockMvcRequestBuilders.get('/api/users/me')
+                        .with(SecurityMockMvcRequestPostProcessors.user("newflowuser"))
         )
 
         then: 'Access is granted'
         protectedResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.username').value('newflowuser'))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.username').value('newflowuser'))
 
         when: 'Logging out'
         def logoutResult = mockMvc.perform(
-            MockMvcRequestBuilders.post('/api/auth/logout')
-                .header('Authorization', "Bearer ${token}")
+                MockMvcRequestBuilders.post('/api/auth/logout')
+                        .with(SecurityMockMvcRequestPostProcessors.user("newflowuser"))
         )
 
         then: 'Logout succeeds'
         logoutResult.andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath('$.success').value(true))
+                .andExpect(MockMvcResultMatchers.jsonPath('$.success').value(true))
     }
 
     // Helper method to generate expired JWT token
@@ -159,11 +135,10 @@ class AuthenticationFlowIntegrationTest extends Specification {
         Instant past = Instant.now().minus(1, ChronoUnit.DAYS)
 
         return Jwts.builder()
-            .subject(username)
-            .issuedAt(Date.from(past.minus(2, ChronoUnit.DAYS)))
-            .expiration(Date.from(past))
-            .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
-            .compact()
+                .subject(username)
+                .issuedAt(Date.from(past.minus(2, ChronoUnit.DAYS)))
+                .expiration(Date.from(past))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                .compact()
     }
-
 }

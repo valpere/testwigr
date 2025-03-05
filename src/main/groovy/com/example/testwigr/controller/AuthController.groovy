@@ -44,7 +44,7 @@ class AuthController {
             success: true,
             userId: createdUser.id,
             username: createdUser.username
-        ])
+        ] as Map<String, Object>)
     }
 
     @PostMapping('/login')
@@ -64,7 +64,7 @@ class AuthController {
         return ResponseEntity.ok([
             success: true,
             message: 'User logged in successfully'
-        ])
+        ] as Map<String, Object>)
     }
 
     @PostMapping('/logout')
@@ -75,7 +75,7 @@ class AuthController {
         return ResponseEntity.ok([
             success: true,
             message: 'User logged out successfully'
-        ])
+        ] as Map<String, Object>)
     }
 
     static class RegisterRequest {

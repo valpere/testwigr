@@ -90,7 +90,10 @@ class PostService {
         Post post = getPostById(postId)
         User user = userService.getUserById(userId)
 
-        Comment comment = new Comment(content, userId, user.username)
+        // Ensure content is a String, not a GString
+        String commentContent = content.toString()
+
+        Comment comment = new Comment(commentContent, userId, user.username)
         post.comments.add(comment)
 
         return postRepository.save(post)

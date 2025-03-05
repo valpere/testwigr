@@ -89,8 +89,8 @@ class PostController {
 
         postService.deletePost(id, user.id)
         return ResponseEntity.ok([
-            success: true,
-            message: 'Post deleted successfully'
+                success: true,
+                message: 'Post deleted successfully'
         ])
     }
 

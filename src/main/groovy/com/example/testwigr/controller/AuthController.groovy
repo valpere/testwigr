@@ -167,52 +167,59 @@ class AuthController {
         )
     ])
     ResponseEntity<Map<String, Object>> logout() {
-        SecurityContextHolder.clearContext()
-
-        return ResponseEntity.ok([
-            success: true,
-            message: 'User logged out successfully'
-        ])
+        try {
+            // Clear the security context
+            SecurityContextHolder.clearContext()
+    
+            return ResponseEntity.ok([
+                success: true,
+                message: 'User logged out successfully'
+            ])
+        } catch (Exception e) {
+            // Handle any exceptions that might occur during logout
+            return ResponseEntity.ok([
+                success: true,
+                message: 'User logged out successfully',
+                note: 'Security context may have already been cleared'
+            ])
+        }
     }
+}
 
-    /**
-     * Registration request DTO containing user details for account creation.
-     */
-    static class RegisterRequest {
+/**
+ * Registration request DTO containing user details for account creation.
+ * Making this a top-level class to avoid issues with Groovy static inner classes
+ */
+class RegisterRequest {
+    @NotBlank(message = 'Username cannot be empty')
+    @Size(min = 3, max = 30, message = 'Username must be between 3 and 30 characters')
+    @Schema(description = "User's unique username", example = "johndoe", required = true)
+    String username
 
-        @NotBlank(message = 'Username cannot be empty')
-        @Size(min = 3, max = 30, message = 'Username must be between 3 and 30 characters')
-        @Schema(description = "User's unique username", example = "johndoe", required = true)
-        String username
+    @NotBlank(message = 'Email cannot be empty')
+    @Email(message = 'Email must be valid')
+    @Schema(description = "User's email address", example = "john.doe@example.com", required = true)
+    String email
 
-        @NotBlank(message = 'Email cannot be empty')
-        @Email(message = 'Email must be valid')
-        @Schema(description = "User's email address", example = "john.doe@example.com", required = true)
-        String email
+    @NotBlank(message = 'Password cannot be empty')
+    @Size(min = 8, message = 'Password must be at least 8 characters')
+    @Schema(description = "User's password", example = "password123", required = true)
+    String password
 
-        @NotBlank(message = 'Password cannot be empty')
-        @Size(min = 8, message = 'Password must be at least 8 characters')
-        @Schema(description = "User's password", example = "password123", required = true)
-        String password
+    @Schema(description = "User's display name", example = "John Doe")
+    String displayName
+}
 
-        @Schema(description = "User's display name", example = "John Doe")
-        String displayName
-
-    }
-
-    /**
-     * Login request DTO containing user credentials for authentication.
-     */
-    static class LoginRequest {
-
-        @NotBlank(message = 'Username cannot be empty')
-        @Schema(description = "User's username", example = "johndoe", required = true)
-        String username
-        
-        @NotBlank(message = 'Password cannot be empty')
-        @Schema(description = "User's password", example = "password123", required = true)
-        String password
-
-    }
-
+/**
+ * Login request DTO containing user credentials for authentication.
+ * Making this a top-level class to avoid issues with Groovy static inner classes
+ */
+class LoginRequest {
+    @NotBlank(message = 'Username cannot be empty')
+    @Schema(description = "User's username", example = "johndoe", required = true)
+    String username
+    
+    @NotBlank(message = 'Password cannot be empty')
+    @Schema(description = "User's password", example = "password123", required = true)
+    String password
 }

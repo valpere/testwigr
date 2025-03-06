@@ -1,6 +1,7 @@
 package com.example.testwigr.security
 
-import com.example.testwigr.controller.AuthController
+import com.example.testwigr.controller.LoginRequest
+import com.example.testwigr.controller.RegisterRequest
 import com.example.testwigr.repository.UserRepository
 import com.example.testwigr.service.UserService
 import com.example.testwigr.test.TestDataFactory
@@ -64,7 +65,7 @@ class SecurityIntegrationSpec extends Specification {
      */
     def "should register a new user"() {
         given: "a complete registration request"
-        def registerRequest = new AuthController.RegisterRequest(
+        def registerRequest = new RegisterRequest(
                 username: 'newuser',
                 email: 'newuser@example.com',
                 password: 'newpassword',
@@ -92,7 +93,7 @@ class SecurityIntegrationSpec extends Specification {
      */
     def "should login successfully and receive JWT token"() {
         given: "a login request with valid credentials"
-        def loginRequest = new AuthController.LoginRequest(
+        def loginRequest = new LoginRequest(
                 username: 'securityuser',
                 password: 'testpassword'
         )
@@ -118,7 +119,7 @@ class SecurityIntegrationSpec extends Specification {
      */
     def "should reject login with incorrect credentials"() {
         given: "a login request with invalid password"
-        def loginRequest = new AuthController.LoginRequest(
+        def loginRequest = new LoginRequest(
                 username: 'securityuser',
                 password: 'wrongpassword'
         )
@@ -160,7 +161,7 @@ class SecurityIntegrationSpec extends Specification {
     def "should allow access with valid JWT token"() {
         given: "a user logs in to get a token"
         // First login to get a token
-        def loginRequest = new AuthController.LoginRequest(
+        def loginRequest = new LoginRequest(
                 username: 'securityuser',
                 password: 'testpassword'
         )

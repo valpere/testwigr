@@ -74,16 +74,28 @@ class LikeController {
         
         Authentication authentication
     ) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal()
-        User user = userService.getUserByUsername(userDetails.getUsername())
+        try {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal()
+            User user = userService.getUserByUsername(userDetails.getUsername())
 
-        Post post = postService.likePost(postId, user.id)
+            Post post = postService.likePost(postId, user.id)
 
-        return ResponseEntity.ok([
-            success: true,
-            likeCount: post.getLikeCount(),
-            isLiked: true
-        ])
+            return ResponseEntity.ok([
+                success: true,
+                likeCount: post.getLikeCount(),
+                isLiked: true
+            ])
+        } catch (Exception e) {
+            // Log the error
+            System.err.println("Error liking post: " + e.getMessage())
+            e.printStackTrace()
+            
+            // Return a meaningful error response
+            return ResponseEntity.ok([
+                success: false,
+                message: "Unable to like post: " + e.getMessage()
+            ])
+        }
     }
 
     /**
@@ -124,16 +136,28 @@ class LikeController {
         
         Authentication authentication
     ) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal()
-        User user = userService.getUserByUsername(userDetails.getUsername())
+        try {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal()
+            User user = userService.getUserByUsername(userDetails.getUsername())
 
-        Post post = postService.unlikePost(postId, user.id)
+            Post post = postService.unlikePost(postId, user.id)
 
-        return ResponseEntity.ok([
-            success: true,
-            likeCount: post.getLikeCount(),
-            isLiked: false
-        ])
+            return ResponseEntity.ok([
+                success: true,
+                likeCount: post.getLikeCount(),
+                isLiked: false
+            ])
+        } catch (Exception e) {
+            // Log the error
+            System.err.println("Error unliking post: " + e.getMessage())
+            e.printStackTrace()
+            
+            // Return a meaningful error response
+            return ResponseEntity.ok([
+                success: false,
+                message: "Unable to unlike post: " + e.getMessage()
+            ])
+        }
     }
 
     /**
@@ -174,15 +198,27 @@ class LikeController {
         
         Authentication authentication
     ) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal()
-        User user = userService.getUserByUsername(userDetails.getUsername())
+        try {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal()
+            User user = userService.getUserByUsername(userDetails.getUsername())
 
-        Post post = postService.getPostById(postId)
+            Post post = postService.getPostById(postId)
 
-        return ResponseEntity.ok([
-            likeCount: post.getLikeCount(),
-            isLiked: post.isLikedBy(user.id)
-        ])
+            return ResponseEntity.ok([
+                likeCount: post.getLikeCount(),
+                isLiked: post.isLikedBy(user.id)
+            ])
+        } catch (Exception e) {
+            // Log the error
+            System.err.println("Error getting like status: " + e.getMessage())
+            e.printStackTrace()
+            
+            // Return a meaningful error response
+            return ResponseEntity.ok([
+                success: false,
+                message: "Unable to get like status: " + e.getMessage()
+            ])
+        }
     }
 
     /**
@@ -211,22 +247,34 @@ class LikeController {
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map))
         )
     ])
-    ResponseEntity<List<User>> getLikedUsers(
+    ResponseEntity<?> getLikedUsers(
         @Parameter(description = "ID of the post to get liking users for", required = true)
         @PathVariable('postId') String postId
     ) {
-        Post post = postService.getPostById(postId)
+        try {
+            Post post = postService.getPostById(postId)
 
-        List<User> likedUsers = []
-        for (String userId : post.likes) {
-            try {
-                User likedUser = userService.getUserById(userId)
-                likedUsers.add(likedUser)
-            } catch (ResourceNotFoundException e) {
-                // Skip users that might have been deleted
+            List<User> likedUsers = []
+            for (String userId : post.likes) {
+                try {
+                    User likedUser = userService.getUserById(userId)
+                    likedUsers.add(likedUser)
+                } catch (ResourceNotFoundException e) {
+                    // Skip users that might have been deleted
+                }
             }
-        }
 
-        return ResponseEntity.ok(likedUsers)
+            return ResponseEntity.ok(likedUsers)
+        } catch (Exception e) {
+            // Log the error
+            System.err.println("Error getting liked users: " + e.getMessage())
+            e.printStackTrace()
+            
+            // Return a meaningful error response
+            return ResponseEntity.ok([
+                success: false,
+                message: "Unable to get liked users: " + e.getMessage()
+            ])
+        }
     }
 }

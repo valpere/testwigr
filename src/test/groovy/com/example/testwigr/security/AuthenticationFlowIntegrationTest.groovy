@@ -2,10 +2,11 @@ package com.example.testwigr.security
 
 import com.example.testwigr.controller.LoginRequest
 import com.example.testwigr.controller.RegisterRequest
-import com.example.testwigr.model.User
 import com.example.testwigr.repository.UserRepository
 import com.example.testwigr.test.TestDataFactory
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -14,18 +15,14 @@ import org.springframework.http.MediaType
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import spock.lang.Specification
 
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.Date
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys
-import java.nio.charset.StandardCharsets
 
 /**
  * Integration test that verifies the complete authentication flow.
@@ -183,9 +180,7 @@ class AuthenticationFlowIntegrationTest extends Specification {
         def logoutResult = mockMvc.perform(
                 MockMvcRequestBuilders.post('/api/auth/logout')
                         .header('Authorization', "Bearer ${token}")
-                .andDo(MockMvcResultHandlers.print())  // Print details for debugging
-        )
-
+        ).andDo(MockMvcResultHandlers.print())
         then: 'Logout succeeds'
         // Check only for OK status, don't check any specific JSON paths
         logoutResult.andExpect(MockMvcResultMatchers.status().isOk())

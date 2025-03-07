@@ -67,7 +67,7 @@ class RateLimitInterceptor implements HandlerInterceptor {
                      isAuthenticated ? "authenticated " : "unauthenticated ",
                      getClientIp(request))
             
-            response.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS)
+            response.setStatus(429) // Using numerical status code for "Too Many Requests"
             response.setContentType("application/json")
             response.getWriter().write(createRateLimitExceededResponse())
             addRateLimitHeaders(response, bucket, isAuthenticated)

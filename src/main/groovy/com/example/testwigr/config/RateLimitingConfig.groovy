@@ -2,6 +2,8 @@ package com.example.testwigr.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
+import org.springframework.core.env.Environment
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import io.github.bucket4j.Bandwidth
@@ -20,38 +22,78 @@ import java.time.Duration
  * 
  * Rate limits are enforced by an interceptor that checks each request against the
  * appropriate bucket based on the client's authentication status.
+ * 
+ * Different environments (dev, test, prod) have different rate limit configurations.
  */
 @Configuration
 class RateLimitingConfig implements WebMvcConfigurer {
+    
+    private final Environment environment
+    
+    /**
+     * Constructor that accepts the Spring environment to detect active profiles.
+     * 
+     * @param environment The Spring environment
+     */
+    RateLimitingConfig(Environment environment) {
+        this.environment = environment
+    }
 
     /**
      * Creates a rate limit bucket for authenticated users.
-     * Authenticated users receive a higher rate limit since they are identified users.
+     * The bucket configuration varies based on the active profile (test vs non-test).
      * 
      * @return A token bucket configured for authenticated user limits
      */
     @Bean
     Bucket authenticatedBucket() {
-        // Allow 100 requests per minute for authenticated users
-        Bandwidth limit = Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1)))
+        if (isTestProfile()) {
+            // Higher limits for test environment: 1000 requests per minute
+            return createBucket(1000, Duration.ofMinutes(1))
+        } else {
+            // Standard limits for production/development: 100 requests per minute
+            return createBucket(100, Duration.ofMinutes(1))
+        }
+    }
+    
+    /**
+     * Creates a rate limit bucket for unauthenticated users.
+     * The bucket configuration varies based on the active profile (test vs non-test).
+     * 
+     * @return A token bucket configured for unauthenticated user limits
+     */
+    @Bean
+    Bucket unauthenticatedBucket() {
+        if (isTestProfile()) {
+            // Higher limits for test environment: 500 requests per minute
+            return createBucket(500, Duration.ofMinutes(1))
+        } else {
+            // Standard limits for production/development: 20 requests per minute
+            return createBucket(20, Duration.ofMinutes(1))
+        }
+    }
+    
+    /**
+     * Helper method to create a bucket with specified capacity and refill period.
+     * 
+     * @param capacity The capacity of the bucket (max tokens)
+     * @param period The period over which the bucket refills
+     * @return A configured bucket
+     */
+    private Bucket createBucket(long capacity, Duration period) {
+        Bandwidth limit = Bandwidth.classic(capacity, Refill.greedy(capacity, period))
         return Bucket4j.builder()
                 .addLimit(limit)
                 .build()
     }
     
     /**
-     * Creates a rate limit bucket for unauthenticated users.
-     * Unauthenticated users receive a lower rate limit to prevent abuse.
+     * Helper method to check if the test profile is active.
      * 
-     * @return A token bucket configured for unauthenticated user limits
+     * @return true if the test profile is active, false otherwise
      */
-    @Bean
-    Bucket unauthenticatedBucket() {
-        // Allow 20 requests per minute for unauthenticated users
-        Bandwidth limit = Bandwidth.classic(20, Refill.greedy(20, Duration.ofMinutes(1)))
-        return Bucket4j.builder()
-                .addLimit(limit)
-                .build()
+    private boolean isTestProfile() {
+        return environment.getActiveProfiles().contains("test")
     }
     
     /**

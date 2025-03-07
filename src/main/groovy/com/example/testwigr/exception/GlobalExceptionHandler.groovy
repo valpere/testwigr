@@ -14,47 +14,53 @@ import org.springframework.web.context.request.WebRequest
 
 /**
  * Global exception handler for the Testwigr API.
- * 
+ *
  * This controller advice intercepts exceptions thrown throughout the application
  * and converts them into standardized API error responses. This ensures a consistent
  * error handling approach across all endpoints and improves the API developer experience.
- * 
+ *
  * The handler provides different HTTP status codes based on the type of exception:
  * - 404 Not Found: When a requested resource doesn't exist
  * - 409 Conflict: When there's a data conflict (e.g., duplicate username)
  * - 403 Forbidden: When access is denied due to insufficient permissions
  * - 400 Bad Request: When the request contains invalid data
+ * - 429 Too Many Requests: When rate limits are exceeded
  * - 500 Internal Server Error: For all other unhandled exceptions
- * 
+ *
  * All error responses follow a standardized format for consistency.
  */
 @ControllerAdvice
 @ApiResponses([
-    @ApiResponse(
-        responseCode = "400", 
-        description = "Bad request - Invalid input data",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
-    ),
-    @ApiResponse(
-        responseCode = "403", 
-        description = "Forbidden - Insufficient permissions to access resource",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
-    ),
-    @ApiResponse(
-        responseCode = "404", 
-        description = "Not found - Requested resource does not exist",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
-    ),
-    @ApiResponse(
-        responseCode = "409", 
-        description = "Conflict - Request conflicts with current state",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
-    ),
-    @ApiResponse(
-        responseCode = "500", 
-        description = "Internal server error - Unexpected server error",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
-    )
+        @ApiResponse(
+                responseCode = "400",
+                description = "Bad request - Invalid input data",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "Forbidden - Insufficient permissions to access resource",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Not found - Requested resource does not exist",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
+        ),
+        @ApiResponse(
+                responseCode = "409",
+                description = "Conflict - Request conflicts with current state",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
+        ),
+        @ApiResponse(
+                responseCode = "429",
+                description = "Too Many Requests - Rate limit exceeded",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
+        ),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error - Unexpected server error",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse))
+        )
 ])
 class GlobalExceptionHandler {
 
@@ -69,8 +75,8 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity<?> resourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
-            message: ex.getMessage(),
-            details: request.getDescription(false)
+                message: ex.getMessage(),
+                details: request.getDescription(false)
         )
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND)
     }
@@ -87,8 +93,8 @@ class GlobalExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     ResponseEntity<?> userAlreadyExistsException(UserAlreadyExistsException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
-            message: ex.getMessage(),
-            details: request.getDescription(false)
+                message: ex.getMessage(),
+                details: request.getDescription(false)
         )
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT)
     }
@@ -105,10 +111,34 @@ class GlobalExceptionHandler {
     @ExceptionHandler(SecurityException.class)
     ResponseEntity<?> securityException(SecurityException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
-            message: ex.getMessage(),
-            details: request.getDescription(false)
+                message: ex.getMessage(),
+                details: request.getDescription(false)
         )
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN)
+    }
+
+    /**
+     * Handles RateLimitExceededException, returning a 429 Too Many Requests response.
+     * This is triggered when a client exceeds their rate limit for API requests.
+     *
+     * @param ex The RateLimitExceededException that was thrown
+     * @param request The web request during which the exception was thrown
+     * @return ResponseEntity with error details and 429 status code
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    ResponseEntity<?> rateLimitExceededException(RateLimitExceededException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                message: "Rate limit exceeded. Please try again later.",
+                details: [
+                        retryAfter: ex.getRetryAfter(),
+                        limit: ex.getLimit(),
+                        requestUri: request.getDescription(false)
+                ]
+        )
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfter()))
+                .body(errorResponse)
     }
 
     /**
@@ -122,8 +152,8 @@ class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     ResponseEntity<?> globalExceptionHandler(Exception ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
-            message: ex.getMessage(),
-            details: request.getDescription(false)
+                message: ex.getMessage(),
+                details: request.getDescription(false)
         )
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR)
     }
@@ -147,8 +177,8 @@ class GlobalExceptionHandler {
         });
 
         ErrorResponse errorResponse = new ErrorResponse(
-            message: 'Validation failed',
-            details: errors
+                message: 'Validation failed',
+                details: errors
         )
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
@@ -164,11 +194,12 @@ class GlobalExceptionHandler {
          */
         @Schema(description = "Error message", example = "Resource not found with id: 123")
         String message
-        
+
         /**
          * Additional error details, could be a string or a map of field-specific errors.
          */
         @Schema(description = "Additional error details")
         Object details
     }
+
 }

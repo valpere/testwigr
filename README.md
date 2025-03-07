@@ -130,51 +130,51 @@ Basic test commands:
 
 For comprehensive deployment instructions, including production setup, please refer to [DEPLOY.md](DEPLOY.md).
 
-## API Endpoints
+## API Endpoints Overview
 
-The API provides the following main endpoints:
+Testwigr provides a comprehensive API surface with these main endpoint categories:
 
-### Authentication
+### Authentication Endpoints
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Log in and get JWT token
-- `POST /api/auth/logout` - Log out
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - Authentication and token issuance
+- `POST /api/auth/logout` - Session termination
 
-### Users
+### User Management Endpoints
 
-- `GET /api/users/{username}` - Get user by username
-- `GET /api/users/me` - Get current user profile
-- `PUT /api/users/{id}` - Update a user
-- `DELETE /api/users/{id}` - Delete a user
-- `PUT /api/users/me` - Update current user profile
-- `DELETE /api/users/me` - Delete current user
+- `GET /api/users/{username}` - Retrieve user profiles
+- `GET /api/users/me` - Get authenticated user's profile
+- `PUT /api/users/{id}` - Update user information
+- `DELETE /api/users/{id}` - Remove user accounts
 
-### Posts
+### Post Management Endpoints
 
-- `POST /api/posts` - Create a new post
-- `GET /api/posts/{id}` - Get a post by ID
-- `GET /api/posts/user/{userId}` - Get posts by user ID
-- `GET /api/posts/feed` - Get feed for current user
-- `PUT /api/posts/{id}` - Update a post
-- `DELETE /api/posts/{id}` - Delete a post
+- `POST /api/posts` - Create new posts
+- `GET /api/posts/{id}` - Retrieve specific posts
+- `GET /api/posts/user/{userId}` - Get all posts by a user
+- `PUT /api/posts/{id}` - Update existing posts
+- `DELETE /api/posts/{id}` - Remove posts
 
-### Social Interactions
+### Social Interaction Endpoints
 
-- `POST /api/follow/{followingId}` - Follow a user
-- `DELETE /api/follow/{followingId}` - Unfollow a user
-- `GET /api/follow/followers` - Get current user's followers
-- `GET /api/follow/following` - Get users followed by current user
-- `GET /api/follow/{userId}/status` - Get follow status with a user
-- `POST /api/likes/posts/{postId}` - Like a post
-- `DELETE /api/likes/posts/{postId}` - Unlike a post
-- `GET /api/likes/posts/{postId}` - Get like status for a post
-- `POST /api/comments/posts/{postId}` - Add a comment to a post
-- `GET /api/comments/posts/{postId}` - Get comments for a post
+- `POST /api/follow/{followingId}` - Follow users
+- `DELETE /api/follow/{followingId}` - Unfollow users
+- `GET /api/follow/followers` - List followers
+- `GET /api/follow/following` - List followed users
+- `POST /api/likes/posts/{postId}` - Like posts
+- `DELETE /api/likes/posts/{postId}` - Unlike posts
+- `POST /api/comments/posts/{postId}` - Add comments
+- `GET /api/comments/posts/{postId}` - Get post comments
 
-### Feed
+### Feed Endpoints
 
-- `GET /api/feed` - Get personal feed (posts from followed users)
-- `GET /api/feed/users/{username}` - Get user feed (posts from specific user)
+- `GET /api/feed` - Retrieve personalized content feeds
+- `GET /api/feed/users/{username}` - Get user-specific feeds
+
+### System Endpoints
+
+- `GET /api/health` - System health check
+- `GET /api/health/info` - System information
 
 ## Project Structure
 
@@ -246,6 +246,10 @@ The application exposes several monitoring endpoints through Spring Actuator:
 - `/actuator/prometheus` - Prometheus-formatted metrics
 
 For production deployments, a complete monitoring stack with Prometheus and Grafana is available. See [DEPLOY.md](DEPLOY.md) for details.
+
+## Detailed Documentation
+
+Comprehensive documentation is available in the `doc/` folder.
 
 ## Contributing
 

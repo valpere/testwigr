@@ -34,7 +34,7 @@ class AuthControllerSpec extends Specification {
      */
     def "should register a user successfully"() {
         given: "a valid registration request"
-        def registerRequest = new AuthController.RegisterRequest(
+        def registerRequest = new RegisterRequest(
                 username: "testuser",
                 email: "test@example.com",
                 password: "password123",
@@ -67,7 +67,7 @@ class AuthControllerSpec extends Specification {
      */
     def "should login a user successfully"() {
         given: "a valid login request"
-        def loginRequest = new AuthController.LoginRequest(
+        def loginRequest = new LoginRequest(
                 username: "testuser",
                 password: "password123"
         )

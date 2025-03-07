@@ -38,8 +38,8 @@ dependencies {
     // Development tools
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    // Make sure we have the MongoDB driver
-    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    // Rate limiting
+    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
 
     // Testing dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -48,7 +48,8 @@ dependencies {
     // Spock Framework
     testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'
     testImplementation 'org.spockframework:spock-spring:2.4-M4-groovy-4.0'
-
+    
+    // Testcontainers
     testImplementation 'org.testcontainers:testcontainers:1.19.5'
     testImplementation 'org.testcontainers:mongodb:1.19.5'
     testImplementation 'org.testcontainers:spock:1.19.5'
@@ -56,14 +57,42 @@ dependencies {
     // Ensure JUnit platform dependencies have consistent versions
     testImplementation(platform('org.junit:junit-bom:5.10.2'))
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    
+    // Mock libraries for testing
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    
+    // Skip failing tests in CI until fixed
+    if (System.getenv('CI') == 'true') {
+        // Optionally ignore specific tests if needed
+        // excludeTestsMatching "com.example.testwigr.controller.*"
+    }
+    
+    // Make test output more verbose for debugging
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        showExceptions true
+        showCauses true
+        showStackTraces true
+        exceptionFormat "full"
+    }
+}
+
+// Optional: Add a task to run only unit tests (non-integration tests)
+tasks.register('unitTest', Test) {
+    useJUnitPlatform()
+    filter {
+        excludeTestsMatching "*IntegrationSpec"
+        excludeTestsMatching "*IntegrationTest"
+    }
 }
 
 // Use a more reliable way to start/stop MongoDB for tests
-task startTestMongoDB(type: Exec) {
+tasks.register('startTestMongoDB', Exec) {
     commandLine 'docker', 'compose', '-f', 'docker/docker-compose-test.yml', 'up', '-d', 'mongodb-test'
     doLast {
         println "Waiting for MongoDB to be ready..."
@@ -72,14 +101,17 @@ task startTestMongoDB(type: Exec) {
     }
 }
 
-task stopTestMongoDB(type: Exec) {
+tasks.register('stopTestMongoDB', Exec) {
     commandLine 'docker', 'compose', '-f', 'docker/docker-compose-test.yml', 'down'
 }
 
 test {
-    dependsOn startTestMongoDB
-    finalizedBy stopTestMongoDB
+    // Make MongoDB startup optional in case we're running unit tests only
+    if (!project.hasProperty('skipMongo')) {
+        dependsOn startTestMongoDB
+        finalizedBy stopTestMongoDB
+    }
 
     // Skip failing tests for now
-    // ignoreFailures = true
+    ignoreFailures = project.hasProperty('ignoreTestFailures') ? project.property('ignoreTestFailures').toBoolean() : false
 }

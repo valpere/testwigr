@@ -2,6 +2,31 @@
 
 A robust Twitter-like API built with Groovy, Spring Boot, and MongoDB. This project implements core Twitter functionality including user registration, authentication with JWT, posting, liking, commenting, and following other users.
 
+## Project Setup Requirements
+
+1. **Development Environment**
+   - JDK (Java Development Kit) - version 8 or higher
+   - Groovy installation
+   - IDE (IntelliJ IDEA is recommended for Groovy/Spring development)
+   - Git for version control
+
+2. **Project Configuration**
+   - Spring Boot starter project with Groovy support
+   - Gradle build configuration file (build.gradle)
+   - MongoDB connection configuration
+   - Docker and Docker Compose files for local development
+
+3. **Initial Project Structure**
+   - Models/entities (User, Post, Comment, Like)
+   - Repositories for database interaction
+   - Services for business logic
+   - Controllers for API endpoints
+   - Test packages for Spock framework tests
+
+4. **Documentation**
+   - API documentation (Swagger/OpenAPI)
+   - README with setup instructions
+
 ## Features
 
 - **User Management**

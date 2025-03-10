@@ -1,6 +1,7 @@
 # Testwigr Architecture Documentation
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Architectural Style](#architectural-style)
 3. [Architecture Decisions](#architecture-decisions)
@@ -67,6 +68,7 @@ While currently implemented as a monolith, the application is designed with serv
 **Decision**: Use Groovy with Spring Boot for the backend API.
 
 **Rationale**:
+
 - Groovy provides concise syntax and dynamic typing while maintaining Java compatibility
 - Spring Boot offers a production-ready framework with robust security, dependency injection, and data access
 - The combination enables rapid development while maintaining enterprise-grade capabilities
@@ -76,6 +78,7 @@ While currently implemented as a monolith, the application is designed with serv
 **Decision**: Use MongoDB as the data store.
 
 **Rationale**:
+
 - Document database model maps well to the social media domain objects
 - Schema flexibility accommodates evolving requirements
 - Support for embedded documents simplifies modeling of nested relationships (comments within posts)
@@ -87,6 +90,7 @@ While currently implemented as a monolith, the application is designed with serv
 **Decision**: Implement JWT-based stateless authentication.
 
 **Rationale**:
+
 - Stateless authentication simplifies horizontal scaling
 - JWTs are self-contained and don't require server-side storage
 - Token-based approach works well with RESTful architecture
@@ -97,6 +101,7 @@ While currently implemented as a monolith, the application is designed with serv
 **Decision**: Implement header-based API versioning.
 
 **Rationale**:
+
 - Allows backward compatibility for clients during API evolution
 - Header-based approach keeps URLs clean and consistent
 - Simplifies routing to appropriate version handlers
@@ -107,6 +112,7 @@ While currently implemented as a monolith, the application is designed with serv
 **Decision**: Implement token bucket-based rate limiting.
 
 **Rationale**:
+
 - Protects against abuse and ensures fair resource utilization
 - Different limits for authenticated vs. unauthenticated requests
 - Token bucket algorithm allows for bursts while maintaining average limits

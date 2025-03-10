@@ -1,2 +1,0 @@
-# Add to crontab
-0 2 * * * /path/to/scripts/backup-mongodb.sh >> /var/log/mongodb-backup.log 2>&1

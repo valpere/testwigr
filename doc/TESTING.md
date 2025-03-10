@@ -13,7 +13,7 @@ Testwigr employs a multi-layered testing approach to ensure code quality at all 
 Before running tests, ensure you have the following:
 
 1. **MongoDB Instance**: Tests require a MongoDB instance running on port 27018 (different from the default development port)
-   - Use the provided Docker configuration: `docker-compose -f docker/docker-compose-test.yml up -d mongodb-test`
+   - Use the provided Docker configuration: `docker compose -f docker/docker-compose-test.yml up -d mongodb-test`
    - Alternatively, use the scripts: `./scripts/start-test-db.sh`
 
 2. **Java Development Kit (JDK)**: Version 21 or higher
@@ -52,7 +52,7 @@ To use the Docker-based test environment:
 1. Start the test environment:
 
    ```bash
-   docker-compose -f docker/docker-compose-test.yml up -d
+   docker compose -f docker/docker-compose-test.yml up -d
    ```
 
 2. Run tests:
@@ -68,7 +68,7 @@ To use the Docker-based test environment:
 3. Stop the test environment:
 
    ```bash
-   docker-compose -f docker/docker-compose-test.yml down
+   docker compose -f docker/docker-compose-test.yml down
    ```
 
 ## Testing Architecture

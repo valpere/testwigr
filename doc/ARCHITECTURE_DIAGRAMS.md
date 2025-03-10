@@ -2,27 +2,27 @@
 
 ## System Architecture Diagram
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                             Client Applications                          │
+│                            Client Applications                          │
 └───────────────────────────────────┬─────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                             NGINX Reverse Proxy                          │
-│                   (SSL Termination, Security Headers)                    │
+│                            NGINX Reverse Proxy                          │
+│                  (SSL Termination, Security Headers)                    │
 └───────────────────────────────────┬─────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           Spring Boot Application                        │
+│                          Spring Boot Application                        │
 ├─────────────────┬─────────────────┬────────────────┬────────────────────┤
-│  API Versioning │   Rate Limiting  │  JWT Security  │  Error Handling    │
+│  API Versioning │  Rate Limiting  │  JWT Security  │  Error Handling    │
 ├─────────────────┴─────────────────┴────────────────┴────────────────────┤
-│                                                                          │
+│                                                                         │
 │ ┌─────────────────────────────┐  ┌─────────────────────────────────────┐│
-│ │       Controllers           │  │              Services                ││
-│ │                             │  │                                      ││
+│ │       Controllers           │  │              Services               ││
+│ │                             │  │                                     ││
 │ │  ┌─────────────────────┐    │  │  ┌─────────────────────────────┐    ││
 │ │  │    AuthController   │    │  │  │       UserService           │    ││
 │ │  └─────────────────────┘    │  │  └─────────────────────────────┘    ││
@@ -32,13 +32,13 @@
 │ │  ┌─────────────────────┐    │  │  ┌─────────────────────────────┐    ││
 │ │  │    PostController   │◄───┼──┼─►│       FeedService           │    ││
 │ │  └─────────────────────┘    │  │  └─────────────────────────────┘    ││
-│ │  ┌─────────────────────┐    │  │                                      ││
+│ │  ┌─────────────────────┐    │  │                                     ││
 │ │  │  CommentController  │    │  └──────────────────┬──────────────────┘│
-│ │  └─────────────────────┘    │                     │                    │
-│ │  ┌─────────────────────┐    │                     ▼                    │
+│ │  └─────────────────────┘    │                     │                   │
+│ │  ┌─────────────────────┐    │                     ▼                   │
 │ │  │    LikeController   │    │  ┌─────────────────────────────────────┐│
 │ │  └─────────────────────┘    │  │           Repositories              ││
-│ │  ┌─────────────────────┐    │  │                                      ││
+│ │  ┌─────────────────────┐    │  │                                     ││
 │ │  │    FeedController   │    │  │  ┌─────────────────────────────┐    ││
 │ │  └─────────────────────┘    │  │  │      UserRepository         │    ││
 │ │  ┌─────────────────────┐    │  │  └─────────────────────────────┘    ││
@@ -46,48 +46,48 @@
 │ │  └─────────────────────┘    │  │  │      PostRepository         │    ││
 │ │                             │  │  └─────────────────────────────┘    ││
 │ └─────────────────────────────┘  └─────────────────────────────────────┘│
-│                                                                          │
-│             ┌───────────────────────────────────────────┐                │
-│             │              Domain Models                 │                │
-│             │                                            │                │
-│             │  ┌──────────────┐ ┌──────────────┐        │                │
-│             │  │     User     │ │     Post     │        │                │
-│             │  └──────────────┘ └──────────────┘        │                │
-│             │                   ┌──────────────┐        │                │
-│             │                   │   Comment    │        │                │
-│             │                   └──────────────┘        │                │
-│             └───────────────────────────────────────────┘                │
+│                                                                         │
+│             ┌───────────────────────────────────────────┐               │
+│             │              Domain Models                │               │
+│             │                                           │               │
+│             │  ┌──────────────┐ ┌──────────────┐        │               │
+│             │  │     User     │ │     Post     │        │               │
+│             │  └──────────────┘ └──────────────┘        │               │
+│             │                   ┌──────────────┐        │               │
+│             │                   │   Comment    │        │               │
+│             │                   └──────────────┘        │               │
+│             └───────────────────────────────────────────┘               │
 └─────────────────────────────────┬─────────────────────────────────────┬─┘
                                   │                                     │
                                   ▼                                     ▼
 ┌─────────────────────────────────────────┐    ┌──────────────────────────┐
-│                MongoDB                   │    │   Monitoring Stack       │
-│                                          │    │  (Prometheus, Grafana)   │
+│                MongoDB                  │    │   Monitoring Stack       │
+│                                         │    │  (Prometheus, Grafana)   │
 └─────────────────────────────────────────┘    └──────────────────────────┘
 ```
 
 ## Deployment Architecture Diagram
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         Docker Host / Cloud Provider                 │
-│                                                                      │
+│                        Docker Host / Cloud Provider                 │
+│                                                                     │
 │  ┌──────────────────────────────────────────────────────────────┐   │
-│  │                     Docker Network                            │   │
-│  │                                                               │   │
+│  │                    Docker Network                            │   │
+│  │                                                              │   │
 │  │  ┌───────────────┐    ┌────────────────┐    ┌──────────────┐ │   │
 │  │  │    NGINX      │    │  Spring Boot   │    │   MongoDB    │ │   │
 │  │  │ Reverse Proxy │◄──►│  Application   │◄──►│   Database   │ │   │
 │  │  └───────┬───────┘    └────────────────┘    └──────────────┘ │   │
-│  │          │                                                    │   │
+│  │          │                                                   │   │
 │  │          │            ┌────────────────┐    ┌──────────────┐ │   │
 │  │          │            │   Prometheus   │◄──►│   Grafana    │ │   │
 │  │          │            │  (Monitoring)  │    │ (Dashboard)  │ │   │
 │  │          │            └────────────────┘    └──────────────┘ │   │
-│  │          │                                                    │   │
-│  └──────────┼────────────────────────────────────────────────────┘   │
-│             │                                                         │
-└─────────────┼─────────────────────────────────────────────────────────┘
+│  │          │                                                   │   │
+│  └──────────┼───────────────────────────────────────────────────┘   │
+│             │                                                       │
+└─────────────┼───────────────────────────────────────────────────────┘
               │
               ▼
 ┌─────────────────────────┐
@@ -97,21 +97,21 @@
 
 ## Data Model Diagram
 
-```
+```plaintext
 ┌───────────────────────────────────┐       ┌───────────────────────────────────┐
-│              User                 │       │               Post                 │
+│              User                 │       │               Post                │
 ├───────────────────────────────────┤       ├───────────────────────────────────┤
-│ id: String                        │       │ id: String                         │
-│ username: String (unique)         │       │ content: String                    │
-│ email: String (unique)            │       │ userId: String (ref → User.id)     │
-│ password: String (encrypted)      │       │ username: String                   │
-│ displayName: String               │       │ likes: Set<String> (ref → User.id) │
-│ bio: String                       │       │ comments: List<Comment>            │
+│ id: String                        │       │ id: String                        │
+│ username: String (unique)         │       │ content: String                   │
+│ email: String (unique)            │       │ userId: String (ref → User.id)    │
+│ password: String (encrypted)      │       │ username: String                  │
+│ displayName: String               │       │ likes: Set<String> (ref → User.id)│
+│ bio: String                       │       │ comments: List<Comment>           │
 │ following: Set<String> (ref → id) │◄──────┤ createdAt: LocalDateTime          │
 │ followers: Set<String> (ref → id) │       │ updatedAt: LocalDateTime          │
-│ createdAt: LocalDateTime          │       │                                    │
-│ updatedAt: LocalDateTime          │       │                                    │
-│ active: boolean                   │       │                                    │
+│ createdAt: LocalDateTime          │       │                                   │
+│ updatedAt: LocalDateTime          │       │                                   │
+│ active: boolean                   │       │                                   │
 └───────────────────────────────────┘       └───────────────────────┬───────────┘
                                                                     │
                                                                     │
@@ -129,7 +129,7 @@
 
 ## Authentication Flow Diagram
 
-```
+```plaintext
 ┌─────────┐                     ┌─────────────┐                 ┌────────────┐
 │ Client  │                     │ Spring Boot │                 │  MongoDB   │
 │         │                     │ Application │                 │  Database  │
@@ -147,7 +147,7 @@
      │                                 │  4. Hash Password            │
      │                                 │ ─────┐                       │
      │                                 │      │                       │
-     │                                 │ ◄─────┘                      │
+     │                                 │ ◄────┘                       │
      │                                 │                              │
      │                                 │  5. Store User               │
      │                                 │ ────────────────────────────►│
@@ -170,12 +170,12 @@
      │                                 │  11. Verify Password         │
      │                                 │ ─────┐                       │
      │                                 │      │                       │
-     │                                 │ ◄─────┘                      │
+     │                                 │ ◄────┘                       │
      │                                 │                              │
      │                                 │  12. Generate JWT Token      │
      │                                 │ ─────┐                       │
      │                                 │      │                       │
-     │                                 │ ◄─────┘                      │
+     │                                 │ ◄────┘                       │
      │                                 │                              │
      │  13. Return JWT Token           │                              │
      │ ◄────────────────────────────   │                              │
@@ -186,12 +186,12 @@
      │                                 │  15. Validate JWT            │
      │                                 │ ─────┐                       │
      │                                 │      │                       │
-     │                                 │ ◄─────┘                      │
+     │                                 │ ◄────┘                       │
      │                                 │                              │
      │                                 │  16. Fulfill Request         │
      │                                 │ ─────┐                       │
      │                                 │      │                       │
-     │                                 │ ◄─────┘                      │
+     │                                 │ ◄────┘                       │
      │                                 │                              │
      │  17. API Response               │                              │
      │ ◄────────────────────────────   │                              │
@@ -200,49 +200,49 @@
 
 ## Environment Setup Diagram
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Development Environment                           │
+│                           Development Environment                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │  ┌─────────────┐     ┌───────────────┐     ┌─────────────────┐              │
 │  │  Spring     │     │   MongoDB     │     │  Mongo Express  │              │
 │  │  Boot App   │◄───►│   Database    │◄───►│  (Admin UI)     │              │
 │  │  (Dev Mode) │     │               │     │                 │              │
 │  └─────────────┘     └───────────────┘     └─────────────────┘              │
-│                                                                              │
-│  • Hot-reloading enabled                                                     │
-│  • Detailed logging                                                          │
-│  • All endpoints exposed                                                     │
-│  • Swagger UI available                                                      │
-│  • In-memory or containerized database                                       │
-│                                                                              │
+│                                                                             │
+│  • Hot-reloading enabled                                                    │
+│  • Detailed logging                                                         │
+│  • All endpoints exposed                                                    │
+│  • Swagger UI available                                                     │
+│  • In-memory or containerized database                                      │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                             Testing Environment                              │
+│                             Testing Environment                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │  ┌─────────────┐     ┌───────────────┐     ┌─────────────────┐              │
 │  │  Test       │     │   MongoDB     │     │  Mongo Express  │              │
 │  │  Runner     │◄───►│   Test DB     │◄───►│  (Admin UI)     │              │
 │  │             │     │               │     │                 │              │
 │  └─────────────┘     └───────────────┘     └─────────────────┘              │
-│                                                                              │
-│  • Isolated test database                                                    │
-│  • Simplified security                                                       │
-│  • Test-specific configuration                                               │
-│  • High rate limits for tests                                                │
-│  • Test data factories                                                       │
-│                                                                              │
+│                                                                             │
+│  • Isolated test database                                                   │
+│  • Simplified security                                                      │
+│  • Test-specific configuration                                              │
+│  • High rate limits for tests                                               │
+│  • Test data factories                                                      │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Production Environment                            │
+│                            Production Environment                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │  ┌─────────────┐     ┌───────────────┐     ┌─────────────┐     ┌──────────┐ │
 │  │   NGINX     │     │  Spring Boot  │     │  MongoDB    │     │ Grafana  │ │
 │  │   Proxy     │◄───►│  Application  │◄───►│  Database   │     │ Dashboard│ │
@@ -261,32 +261,32 @@
 │  • Structured JSON logging                                                  │
 │  • Monitoring & alerting                                                    │
 │  • Environment variable configuration                                       │
-│                                                                              │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Test Pyramid Diagram
 
-```
+```plaintext
              ▲
              │                       ┌───────────────────┐
              │                       │   End-to-End      │
              │                       │     Tests         │
              │                       └───────────────────┘
              │                  ┌───────────────────────────┐
-             │                  │      Integration           │
-             │                  │        Tests               │
+             │                  │      Integration          │
+             │                  │        Tests              │
 Number of    │                  └───────────────────────────┘
   Tests      │              ┌───────────────────────────────────┐
-             │              │         Controller Tests           │
+             │              │         Controller Tests          │
              │              └───────────────────────────────────┘
              │          ┌─────────────────────────────────────────────┐
-             │          │          Service Tests                           │
+             │          │          Service Tests                      │
              │          └─────────────────────────────────────────────┘
              │      ┌─────────────────────────────────────────────────────┐
-             │      │                 Repository Tests                     │
+             │      │                 Repository Tests                    │
              │      └─────────────────────────────────────────────────────┘
              │  ┌─────────────────────────────────────────────────────────────┐
-Execution    │  │                        Unit Tests                            │
+Execution    │  │                        Unit Tests                           │
  Speed       └──┴─────────────────────────────────────────────────────────────┘
-                                Test Coverage
+                                        Test Coverage

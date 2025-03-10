@@ -65,3 +65,7 @@ out/
 !.env.template
 
 DUPS.md
+*.html
+
+bak
+curl

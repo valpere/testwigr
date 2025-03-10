@@ -75,10 +75,10 @@ tasks.named('test') {
     // Make test output more verbose for debugging
     testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
-        showExceptions true
-        showCauses true
-        showStackTraces true
-        exceptionFormat "full"
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        exceptionFormat = "full"
     }
 }
 
